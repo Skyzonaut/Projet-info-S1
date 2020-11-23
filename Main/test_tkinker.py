@@ -1,6 +1,6 @@
 from tkinter import *
 from random import randrange
-#yohan est beau
+
 def drawline():
 
     global x1, y1, x2, y2, coul
@@ -35,6 +35,7 @@ if __name__ == '__main__':
     fen.geometry(str(fenX)+"x"+str(fenY))
 
     plateau = Canvas(fen, bg='white', width=950, height=int(fenY))
+    plateau.pack(side=LEFT)
     console = Canvas(fen, bg='white', width=(fenX-950), height=int(fenY))
     plateau.pack(side=LEFT)
 
