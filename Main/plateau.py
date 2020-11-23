@@ -2,6 +2,7 @@ from tkinter import *
 from random import randrange
 from pprint import *
 
+
 class plateau:
 
 	def __init__(self):
