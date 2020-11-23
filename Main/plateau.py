@@ -5,24 +5,36 @@ from pprint import *
 
 class plateau:
 
+	"""
+	Dictionnaire de type:
+	{ (x,y) : {
+		'content' : 'Pion',
+		'fond' : 'UrlImageDuPion'
+		}
+	}
+	"""
 	def __init__(self):
 
-		#Creation du plateau
-
+		#Création du tableau
 		self.matrice = {}
-
 		for x in range(1,9):
 			for y in range(1,9):
-				self.matrice[(x,y)] = ""
+				if x == 5:
+					self.matrice[(x,y)] = {"content":"X","fond":"../res/black_tower.png"}
+				else:
+					self.matrice[(x,y)] = {"content":"","fond":""}
 
-		def apercu():
-			final = ""
-			for x in range(1, 9):
-				line = "|"
-				for y in range(1, 9):
-					line += " " + self.matrice[(x,y)] + " |"
-				final += line+'\n'
-			return final
+
+	def apercu(self):
+		for x in range(1, 9):
+			line = "|"
+			for y in range(1, 9):
+				line += "  " + self.matrice[(x,y)]["content"] + "  |"
+			print("-------------------------------------------------")
+			print(line)
+		pass
+
+
 
 plateau = plateau()
 pprint(plateau.matrice)

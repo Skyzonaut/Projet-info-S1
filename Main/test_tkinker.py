@@ -23,7 +23,6 @@ if __name__ == '__main__':
 
     pos = 0
     while pos <= plateau.winfo_reqwidth():
-        consolePrint(plateau.winfo_reqwidth())
         plateau.create_line(pos, 0, pos, plateau.winfo_reqheight(), width=2, fill="black")
         plateau.create_line(0, pos, plateau.winfo_reqwidth(), pos, width=2, fill="black")
         pos += plateau.winfo_reqwidth() / 8
