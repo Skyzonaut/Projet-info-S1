@@ -1,6 +1,7 @@
 from tkinter import *
 from random import randrange
 from pprint import *
+from .plateau import *
 
 
 class pion:
@@ -16,14 +17,12 @@ class pion:
 					"couleur" : couleur,
 					"state" : True
 				}
-			# Cavaliers noirs
 			for i in range(1,3):
 				self.listePions[f"{i}_cavalier_{couleur}"] = {
 					"type": "cavalier",
 					"couleur": couleur,
 					"state" : True
 				}
-			#Fous noirs
 			for i in range(1,3):
 				self.listePions[f"{i}_fou_{couleur}"] = {
 					"type": "fou",
@@ -45,5 +44,5 @@ class pion:
 		pprint(self.listePions)
 
 
-pion = pion()
-pion.apercu()
+plateau = plateau()
+plateau.apercu()
