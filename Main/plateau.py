@@ -7,6 +7,7 @@ class plateau:
 	def __init__(self):
 
 		#Creation du plateau
+
 		self.matrice = {}
 
 		for x in range(1,9):
