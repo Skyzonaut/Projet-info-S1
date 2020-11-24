@@ -14,35 +14,35 @@ class set:
 			for i in range(1,9):
 				name = f"{i}_pion_{couleur}"
 				photo = PhotoImage(file=f"../../../res/{couleur}/pion_{couleur}.png")
-				pièce = pion(name, "pion", couleur, True, photo)
+				pièce = pion(name, "pion", couleur, True, False, photo)
 				self.listePions[name] = pièce
 
 			for i in range(1,3):
 				name = f"{i}_cavalier_{couleur}"
 				photo = PhotoImage(file=f"../../../res/{couleur}/cavalier_{couleur}.png")
-				pièce = pion(name, "cavalier", couleur, True, photo)
+				pièce = pion(name, "cavalier", couleur, True, False, photo)
 				self.listePions[name] = pièce
 
 			for i in range(1,3):
 				name = f"{i}_fou_{couleur}"
 				photo = PhotoImage(file=f"../../../res/{couleur}/fou_{couleur}.png")
-				pièce = pion(name, "fou", couleur, True, photo)
+				pièce = pion(name, "fou", couleur, True, False, photo)
 				self.listePions[name] = pièce
 
 			for i in range(1,3):
 				name = f"{i}_tour_{couleur}"
 				photo = PhotoImage(file=f"../../../res/{couleur}/tour_{couleur}.png")
-				pièce = pion(name, "tour", couleur, True, photo)
+				pièce = pion(name, "tour", couleur, True, False, photo)
 				self.listePions[name] = pièce
 
 			name = f"1_reine_{couleur}"
 			photo = PhotoImage(file=f"../../../res/{couleur}/reine_{couleur}.png")
-			pièce = pion(name, "reine", couleur, True, photo)
+			pièce = pion(name, "reine", couleur, True, False, photo)
 			self.listePions[name] = pièce
 
 			name = f"1_roi_{couleur}"
 			photo = PhotoImage(file=f"../../../res/{couleur}/roi_{couleur}.png")
-			pièce = pion(name, "roi", couleur, True, photo)
+			pièce = pion(name, "roi", couleur, True, False, photo)
 			self.listePions[name] = pièce
 
 
@@ -56,8 +56,7 @@ class set:
 
 	def apercu(self): pprint(self.listePions)
 
-
-	def getPion(self, type, couleur):
+	def getPions(self, type, couleur):
 
 		listOfMatchingPions = {}
 
@@ -68,8 +67,16 @@ class set:
 		return listOfMatchingPions
 
 
+	def getFreePion(self, type, couleur):
 
-sett = set()
-for nom,att in sett.getSet().items():
-	att.apercu()
-	print("")
+		for name, pion in self.listePions.items():
+
+			if type in name and couleur in name and not pion.getAssociation():
+
+				self.listePions[name].setAssociation(True)
+
+				return pion
+		return None
+
+sette = set()
+sette.apercu()

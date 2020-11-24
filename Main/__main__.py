@@ -21,8 +21,8 @@ def initPlateau():
 
     plat = plateau()
     plat.apercu()
-    pi = pion()
-    pi.apercu()
+    # pi = pion()
+    # pi.apercu()
     # photo = PhotoImage(file=r"../res/noir/cavalier_noir.png")
     # bouton = Button(echiquier, # 113px
     #                 image=photo)
