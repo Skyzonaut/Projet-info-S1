@@ -1,8 +1,4 @@
-from tkinter import *
-from random import randrange
 from pprint import *
-from .plateau import *
-
 
 class pion:
 
@@ -44,5 +40,4 @@ class pion:
 		pprint(self.listePions)
 
 
-plateau = plateau()
-plateau.apercu()
+

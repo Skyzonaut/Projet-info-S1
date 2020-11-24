@@ -1,7 +1,3 @@
-from tkinter import *
-from random import randrange
-from pprint import *
-
 
 class plateau:
 
@@ -44,8 +40,6 @@ class plateau:
 		self.matrice[(8, 8)] = {"content": "t", "fond": ""}
 
 
-
-
 	def apercu(self):
 		print("-------------------------------------------------")
 		for x in range(1, 9):
@@ -54,10 +48,3 @@ class plateau:
 				line += "  " + self.matrice[(x,y)]["content"] + "  |"
 			print(line)
 			print("-------------------------------------------------")
-		pass
-
-
-
-plateau = plateau()
-pprint(plateau.matrice)
-plateau.apercu()

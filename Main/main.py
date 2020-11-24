@@ -1,5 +1,8 @@
 from tkinter import *
-from .classe.plateau import *
+
+from project.classe.plateau import *
+from project.classe.pion import *
+
 if __name__ == '__main__':
 
     # Micellious
@@ -17,15 +20,18 @@ if __name__ == '__main__':
     # console.create_text(60,10,text="TA mère la chienne")
     # consolePrint("ta mère")
 
+    plat = plateau()
+    plat.apercu()
+    pi = pion()
+    pi.apercu()
+
     pos = 0
     while pos <= echi.winfo_reqwidth():
         echi.create_line(pos, 0, pos, echi.winfo_reqheight(), width=2, fill="black")
         echi.create_line(0, pos, echi.winfo_reqwidth(), pos, width=2, fill="black")
         pos += echi.winfo_reqwidth() / 8
+
     fen.mainloop()
-
-    plateau = plateau()
-
     fen.destroy()
 
 
