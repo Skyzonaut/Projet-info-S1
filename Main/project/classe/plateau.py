@@ -1,3 +1,4 @@
+from pion import *
 
 class plateau:
 
@@ -11,6 +12,8 @@ class plateau:
 	"""
 	def __init__(self):
 
+		#Récupération de tous les pions
+		self.set_pion = pion()
 		#Création du tableau
 		self.matrice = {}
 		for x in range(1,9):
@@ -48,3 +51,6 @@ class plateau:
 				line += "  " + self.matrice[(x,y)]["content"] + "  |"
 			print(line)
 			print("-------------------------------------------------")
+
+	def reinitialize(self):
+		self.__init__()
