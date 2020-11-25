@@ -1,7 +1,7 @@
 from tkinter import *
 from pprint import *
 from classe.plateau import *
-from classe.pion import *
+# from .classe.pion import *
 
 
 def initPlateau():
