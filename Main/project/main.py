@@ -77,9 +77,17 @@ def initPlateau():
         # On passe à la Ligne suivante et change de couleur
         y += 1 ; black = not black
 
-    # Stay alive while not usually destroyed
+
+    # Stay alive
     fen.mainloop()
-    fen.destroy()
+
+    # Actions de fermeture
+    def on_closing():
+       print("Fermeture")
+       fen.destroy()
+
+    # Protocol Handler
+    fen.protocol("WM_DELETE_WINDOW", on_closing)
 
 
 
