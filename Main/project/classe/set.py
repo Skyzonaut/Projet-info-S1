@@ -50,6 +50,7 @@ class set:
 				pièce = pion(name, "", "", None, None, None)
 				self.listePions[name] = pièce
 
+		root.destroy()
 
 	"""
 	=====================================================================================================
