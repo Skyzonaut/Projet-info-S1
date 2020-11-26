@@ -65,6 +65,13 @@ class plateau:
 		self.matrice[(8, 8)] = self.setDeJeu.getFreePion("tour","blanc")
 
 
+	"""
+	==================================================================================
+	Fonctions
+	==================================================================================
+	"""
+
+
 	def moveToAndTake(self, case1, case2):
 
 		piece1 = self.matrice[case1]
