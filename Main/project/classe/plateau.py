@@ -81,22 +81,74 @@ class plateau:
 		self.matrice[case2] = piece1
 		self.matrice[case1] = self.setDeJeu.getFreePion("empty","")
 
+
 	def apercu(self):
 
-		print("-----------------------------------------------------------------------------------------------------------------------------------------------------------------")
+		# Print la bordure haute
+		print("-" * 153)
 
-		for y in range(1, 9):
+		# Itère pour chaque ligne de l'échiquier, de haut en bas
+		for row in range(1, 9):
 
 			line = ""
 
-			for x in range(1, 9):
+			# Itère pour chaque colonne de l'échiquier, de gauche à droite
+			for colomn in range(1, 9):
 
-				name = self.matrice[(x,y)].getName()
-				name = name if name != "" else "    "
-				line += ("| " + name + " ").ljust(20)
+					# Nom (id) de la pièce
+					name = self.matrice[(colomn, row)].getName()
 
+					# Ajout de la pièce dans une case qui sera ajoutée à la ligne qui sera affichée plus tard
+					line += "|" + self.matrice[(colomn, row)].getName().center(18)
+
+
+			# Print la ligne et la ferme à droite
 			print(line + "|")
-			print("-----------------------------------------------------------------------------------------------------------------------------------------------------------------")
+
+			# Print la bordure basse
+			print("-" * 153)
+
+
+	def apercuText(self):
+
+		# Print la bordure haute
+		print("-" * 153)
+
+		# Génère et récupère une ligne vide mais coupée par les bords pour servir de partie
+		# Des cellules ne contenant pas te texte
+		interline = ""
+		for i in range(1, 9): interline += "|" + " ".center(18)
+		interline += "|"
+
+		# Itère pour chaque ligne de l'échiquier, de haut en bas
+		for row in range(1, 9):
+
+			# Print deux lignes d'espace entre le nom de la pièce et le bord haut de la case
+			print(interline)
+			print(interline)
+
+			line = ""
+
+			# Itère pour chaque colonne de l'échiquier, de gauche à droite
+			for colomn in range(1, 9):
+
+					# Nom (id) de la pièce
+					name = self.matrice[(colomn, row)].getName()
+
+					# Ajout de la pièce dans une case qui sera ajoutée à la ligne qui sera affichée plus tard
+					line += "|" + self.matrice[(colomn, row)].getName().center(18)
+
+			# Print la ligne et la ferme à droite
+			print(line + "|")
+
+			# Print deux lignes d'espace entre le nom de la pièce et le bords bas de la case
+			print(interline)
+			print(interline)
+
+			# Print la bordure basse
+			print("-" * 153)
+
+
 
 	def reinitialize(self):
 		self.__init__()
