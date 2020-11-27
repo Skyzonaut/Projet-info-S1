@@ -2,7 +2,7 @@ from tkinter import *
 from pprint import *
 from classe.plateau import *
 # from .classe.pion import *
-
+from functools import partial
 
 def initPlateau():
 
@@ -40,8 +40,10 @@ def initPlateau():
     # En quelque sorte ce dictionnaire est la matrice graphique, là où celle du plateau est la "base de donnée"
     dict_bouton = {}
 
+
     # Valeur permettant d'alterner les couleurs
     black = False
+
 
     # On parcours de gauche à droite, puis de haut en bas
     # Du bas vers le haut
@@ -55,18 +57,26 @@ def initPlateau():
             # On récupère la photo correspondant au pion contenant à cette emplacement du plateau
             photo = plat.getCase(x, y).getImage()
 
+
+
+            def movePionTo(x, y):
+               dict_bouton[(x,y)].config(bg="#aaaaaa")
+               print(x, y)
+
             # On crée un bouton à cette position, avec la photo de sa case du plateau, on lui donne une couleur.
             # Et une fonction onClick()
-            bouton = Button(echiquier,
+            bouton = Button(echiquier)
+
+            # On ajoute ce bouton au dictionnaire de boutons
+            dict_bouton[(x, y)] = bouton
+
+            bouton.config(
                 width=echiquier.winfo_reqwidth()//8,  #119px
                     height=echiquier.winfo_reqheight()//8,  #113px
                         bg="#638f6e" if black else "white",
                             activebackground="#46634d" if black else "#bbbfbc",
                                 image=photo,
-                                    command=plat.moveToAndTake((x, y),(4, 4)))
-
-            # On ajoute ce bouton au dictionnaire de boutons
-            dict_bouton[(x, y)] = bouton
+                                    command=partial(movePionTo, x, y))
 
             # Et pour finir on place le bouton sur le canvas pour l'afficher
             bouton.place(x=(x-1)*echiquier.winfo_reqwidth()/8, y=(y-1)*echiquier.winfo_reqheight()/8)
@@ -78,17 +88,28 @@ def initPlateau():
         y += 1 ; black = not black
 
 
-    # Stay alive
-    fen.mainloop()
-
     # Actions de fermeture
     def on_closing():
-       print("Fermeture")
-       fen.destroy()
+        print("\n--- Fermeture ---")
+        fen.destroy()
 
     # Protocol Handler
     fen.protocol("WM_DELETE_WINDOW", on_closing)
 
+    # Stay alive
+    fen.mainloop()
+
+
+
+
+def movePionTo(case2):
+
+    piece1 = matrice[case1]
+
+    matrice[case2].setState(False)
+    matrice[case2].setAssociation(False)
+    matrice[case2] = piece1
+    matrice[case1] = self.setDeJeu.getFreePion("empty","")
 
 
 if __name__ == '__main__':
