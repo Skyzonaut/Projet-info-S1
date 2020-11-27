@@ -10,7 +10,7 @@ def initPlateau():
     # Valeur indépendantes
     fenX = 1300
     fenY = 880
-
+    global pionStart, pionDestination
 
     # Fenetre sur laquelle on placera tous les composants
     fen = Tk(className="Jeu d'Echec")
@@ -27,10 +27,15 @@ def initPlateau():
     console.pack(side=LEFT)
 
 
-    # Ojbet plateau qui contient les positions et infos et pions.
+    # Objet plateau qui contient les positions et infos et pions.
     # Utilisant comme repertoire un Set de pion limité
     plat = plateau()
+    plat2 = plateau()
     plat.apercu()
+    pprint(plat.matrice[(1,1)].apercu())
+    print("")
+    plat2.matrice[(1,1)] = ""
+    pprint(plat2.matrice)
 
 
     # Dictionnaire de type { (x,y) : button } contenant tous les boutons (ou cases) de l'échiquier,
@@ -57,11 +62,14 @@ def initPlateau():
             # On récupère la photo correspondant au pion contenant à cette emplacement du plateau
             photo = plat.getCase(x, y).getImage()
 
+            def movePionTo(tuple):
+               dict_bouton[(tuple[0],tuple[1])].config(bg="#aaaaaa")
+               print(tuple[0], tuple[1])
 
+            # def removePhoto(tuple):
 
-            def movePionTo(x, y):
-               dict_bouton[(x,y)].config(bg="#aaaaaa")
-               print(x, y)
+            def rightClick(msg):
+                print(msg)
 
             # On crée un bouton à cette position, avec la photo de sa case du plateau, on lui donne une couleur.
             # Et une fonction onClick()
@@ -76,7 +84,8 @@ def initPlateau():
                         bg="#638f6e" if black else "white",
                             activebackground="#46634d" if black else "#bbbfbc",
                                 image=photo,
-                                    command=partial(movePionTo, x, y))
+                                    command=partial(movePionTo, (x, y)))
+            # bouton.bind("<Button-3>", (lambda msg = "yo" : rightClick(msg)))
 
             # Et pour finir on place le bouton sur le canvas pour l'afficher
             bouton.place(x=(x-1)*echiquier.winfo_reqwidth()/8, y=(y-1)*echiquier.winfo_reqheight()/8)
@@ -102,7 +111,7 @@ def initPlateau():
 
 
 
-def movePionTo(case2):
+def temp(case2):
 
     piece1 = matrice[case1]
 
@@ -115,5 +124,4 @@ def movePionTo(case2):
 if __name__ == '__main__':
 
     initPlateau()
-
 
