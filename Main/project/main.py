@@ -1,16 +1,26 @@
 from tkinter import *
 from pprint import *
 from classe.plateau import *
-# from .classe.pion import *
+from classe.event import *
 from functools import partial
 
 def initPlateau():
+
 
     # Micellious
     # Valeur indépendantes
     fenX = 1300
     fenY = 880
-    global pionStart, pionDestination
+
+
+    # Event history
+    event_log = []
+
+
+    # Event id generator
+    global id
+    id = 0
+
 
     # Fenetre sur laquelle on placera tous les composants
     fen = Tk(className="Jeu d'Echec")
@@ -30,12 +40,7 @@ def initPlateau():
     # Objet plateau qui contient les positions et infos et pions.
     # Utilisant comme repertoire un Set de pion limité
     plat = plateau()
-    plat2 = plateau()
     plat.apercu()
-    pprint(plat.matrice[(1,1)].apercu())
-    print("")
-    plat2.matrice[(1,1)] = ""
-    pprint(plat2.matrice)
 
 
     # Dictionnaire de type { (x,y) : button } contenant tous les boutons (ou cases) de l'échiquier,
@@ -44,6 +49,7 @@ def initPlateau():
     # et ainsi pouvoir mettre à jour celle du plateau.
     # En quelque sorte ce dictionnaire est la matrice graphique, là où celle du plateau est la "base de donnée"
     dict_bouton = {}
+    col_bouton = {}
 
 
     # Valeur permettant d'alterner les couleurs
@@ -62,14 +68,25 @@ def initPlateau():
             # On récupère la photo correspondant au pion contenant à cette emplacement du plateau
             photo = plat.getCase(x, y).getImage()
 
-            def movePionTo(tuple):
-               dict_bouton[(tuple[0],tuple[1])].config(bg="#aaaaaa")
-               print(tuple[0], tuple[1])
 
-            # def removePhoto(tuple):
+            def changeCaseColorOnClick(tuple):
 
-            def rightClick(msg):
-                print(msg)
+                global id
+                newId = id
+
+                bouton = dict_bouton[(tuple[0],tuple[1])]
+                normal = col_bouton[(tuple[0],tuple[1])]
+                clicked = "#aaaaaa"
+
+                if bouton["bg"] != clicked:
+                    bouton.config(bg="#aaaaaa")
+                else:
+                    bouton.config(bg=normal)
+
+                newEvent = event(newId, tuple, "click")
+                event_log.append(newEvent)
+                id +=  1
+
 
             # On crée un bouton à cette position, avec la photo de sa case du plateau, on lui donne une couleur.
             # Et une fonction onClick()
@@ -77,6 +94,7 @@ def initPlateau():
 
             # On ajoute ce bouton au dictionnaire de boutons
             dict_bouton[(x, y)] = bouton
+            col_bouton[(x, y)] = "#638f6e" if black else "white"
 
             bouton.config(
                 width=echiquier.winfo_reqwidth()//8,  #119px
@@ -84,8 +102,9 @@ def initPlateau():
                         bg="#638f6e" if black else "white",
                             activebackground="#46634d" if black else "#bbbfbc",
                                 image=photo,
-                                    command=partial(movePionTo, (x, y)))
-            # bouton.bind("<Button-3>", (lambda msg = "yo" : rightClick(msg)))
+                                    command=partial(changeCaseColorOnClick, (x, y)))
+
+            # bouton.bind("<Button-3>", partial(rightClick, ((x, y))))
 
             # Et pour finir on place le bouton sur le canvas pour l'afficher
             bouton.place(x=(x-1)*echiquier.winfo_reqwidth()/8, y=(y-1)*echiquier.winfo_reqheight()/8)
@@ -100,6 +119,8 @@ def initPlateau():
     # Actions de fermeture
     def on_closing():
         print("\n--- Fermeture ---")
+        for event in event_log:
+            event.apercu()
         fen.destroy()
 
     # Protocol Handler
