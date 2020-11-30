@@ -14,12 +14,13 @@ def initPlateau():
 
 
     # Event history
-    event_log = []
+    initEvent = event(0, (0,0), "place")
+    event_log = [initEvent]
 
 
     # Event id generator
     global id
-    id = 0
+    id = 1
 
 
     # Fenetre sur laquelle on placera tous les composants
@@ -49,7 +50,7 @@ def initPlateau():
     # et ainsi pouvoir mettre à jour celle du plateau.
     # En quelque sorte ce dictionnaire est la matrice graphique, là où celle du plateau est la "base de donnée"
     dict_bouton = {}
-    col_bouton = {}
+    coul_bouton = {}
 
 
     # Valeur permettant d'alterner les couleurs
@@ -69,22 +70,71 @@ def initPlateau():
             photo = plat.getCase(x, y).getImage()
 
 
-            def changeCaseColorOnClick(tuple):
+            def move(tuple):
 
                 global id
                 newId = id
 
                 bouton = dict_bouton[(tuple[0],tuple[1])]
-                normal = col_bouton[(tuple[0],tuple[1])]
-                clicked = "#aaaaaa"
 
-                if bouton["bg"] != clicked:
+                # if bouton["bg"] != clicked:
+                #     bouton.config(bg="#aaaaaa")
+                # else:
+                #     bouton.config(bg=normal)
+
+
+                if event_log[-1].getAction() == "place":
+
+                    # On crée un nouvel évènement de click simple
+                    newEvent = event(newId, tuple, "click")
+
+                    # Comme c'est un click et non un place, ça signifie que ce bouton est
+                    # l'origine du mouvement, donc contient le pion à bouger
+                    newEvent.setCache(plat.getCase(tuple[0],tuple[1]).getImage())
+
+                    # Colorie la case en gris pour indiquer l'origine du mouvement
                     bouton.config(bg="#aaaaaa")
-                else:
-                    bouton.config(bg=normal)
 
-                newEvent = event(newId, tuple, "click")
+                else:
+
+                    # On crée un nouvel évènement de placement.
+                    newEvent = event(newId, tuple, "place")
+
+                    # L'évènement est un event de placement, donc l'évènement juste avant
+                    # est un évènement d'origine (de click) donc on va chercher l'image
+                    # contenu en cache dans cet évènement pour l'utiliser ici
+                    image = event_log[-1].getCache()
+
+                    # On récupère les coordonnées de la case cliquée à l'évènement précédant
+                    former_case = event_log[-1].getOrigin()
+
+                    # On récupère sa couleur de base (originelle)
+                    former_button_normal_color = coul_bouton[(former_case[0], former_case[1])]
+
+                    # Et on lui remet sa couleur de base. Puisque
+                    dict_bouton[former_case].config(bg=former_button_normal_color)
+
+                    if image:
+
+                        # Retire l'image du bouton de l'ancienne case
+                        dict_bouton[former_case].config(image="")
+
+                        # Retire l'image de l'ancienne case
+                        plat.getCase(former_case[0], former_case[1]).setImage("")
+
+                        # Place l'image de l'ancienne case sur la nouvelle
+                        bouton.config(image=image)
+
+                        # On met à jour le plateau
+                        plat.getCase(tuple[0],tuple[1]).setImage(image)
+
+                newEvent.apercu()
+
+                # On rajoute l'evènement à la liste des évènements
                 event_log.append(newEvent)
+
+                # On incrémente la chaine qui sert à créer le nom/id des évènements pour le prochain
+                # évènement. Toujours de x + 1
                 id +=  1
 
 
@@ -94,7 +144,7 @@ def initPlateau():
 
             # On ajoute ce bouton au dictionnaire de boutons
             dict_bouton[(x, y)] = bouton
-            col_bouton[(x, y)] = "#638f6e" if black else "white"
+            coul_bouton[(x, y)] = "#638f6e" if black else "white"
 
             bouton.config(
                 width=echiquier.winfo_reqwidth()//8,  #119px
@@ -102,7 +152,7 @@ def initPlateau():
                         bg="#638f6e" if black else "white",
                             activebackground="#46634d" if black else "#bbbfbc",
                                 image=photo,
-                                    command=partial(changeCaseColorOnClick, (x, y)))
+                                    command=partial(move, (x, y)))
 
             # bouton.bind("<Button-3>", partial(rightClick, ((x, y))))
 
