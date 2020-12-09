@@ -25,8 +25,9 @@ class plateau:
 		# Matrice contenant les cases et dans ces cases leur contenu
 		self.matrice = {}
 
-		for x in range(1,9):
-			for y in range(1,9):
+
+		for y in range(3,7):
+			for x in range(1, 9):
 				pion = self.setDeJeu.getFreePion("empty","")
 				self.matrice[(x,y)] = pion
 
@@ -72,15 +73,43 @@ class plateau:
 	"""
 
 
-	def moveToAndTake(self, case1, case2):
+	def move(self, origin, destination):
 
-		piece1 = self.matrice[case1]
+		if origin != destination:
 
-		self.matrice[case2].setState(False)
-		self.matrice[case2].setAssociation(False)
-		self.matrice[case2] = piece1
-		self.matrice[case1] = self.setDeJeu.getFreePion("empty","")
+			if not "empty" in self.getCase(destination[0], destination[1]).getName():
 
+				self.setCase(destination[0], destination[1], self.getCase(origin[0], origin[1]))
+				self.empty(origin[0], origin[1])
+
+			else:
+
+				pionOrigin = self.getCase(origin[0], origin[1])
+				pionDestination = self.getCase(destination[0], destination[1])
+				self.setCase(origin[0], origin[1], pionDestination)
+				self.setCase(destination[0], destination[1], pionOrigin)
+
+		else:
+
+			print("same")
+
+
+	def empty(self, x, y):
+		self.matrice[(x, y)].setState(False)
+		print(self.matrice[(x, y)].getState())
+		self.matrice[(x, y)] = self.setDeJeu.getFreePion("empty","")
+
+	def reinitialize(self):
+		self.__init__()
+
+	def getCase(self, x, y):
+		return self.matrice[(x, y)]
+
+	def setCase(self, x, y, content):
+		self.matrice[(x, y)] = content
+
+	def apercuSet(self):
+		self.setDeJeu.apercu()
 
 	def apercu(self):
 
@@ -96,10 +125,18 @@ class plateau:
 			for colomn in range(1, 9):
 
 					# Nom (id) de la pièce
-					name = self.matrice[(colomn, row)].getName()
+					# name = self.matrice[(colomn, row)].getName()
+
+					nom_piece = self.matrice[(colomn, row)]
+
+					# Si la case est censée être vide, on ajoute un blanc à la ligne qui sera affiché plus tard
+					# "empty" in self.matrice[(colomn, row)].getName()
+					if not self.matrice[(colomn, row)]:
+						line += "|" + "".center(18)
 
 					# Ajout de la pièce dans une case qui sera ajoutée à la ligne qui sera affichée plus tard
-					line += "|" + self.matrice[(colomn, row)].getName().center(18)
+					else:
+						line += "|" + self.matrice[(colomn, row)].getName().center(18)
 
 
 			# Print la ligne et la ferme à droite
@@ -147,14 +184,6 @@ class plateau:
 
 			# Print la bordure basse
 			print("-" * 153)
-
-
-
-	def reinitialize(self):
-		self.__init__()
-
-	def getCase(self, x, y):
-		return self.matrice[(x, y)]
 
 # plat = plateau()
 # plat.apercu()
