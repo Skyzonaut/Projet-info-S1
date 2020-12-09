@@ -18,13 +18,16 @@ class plateau:
 
 		"""
 		==============================================================================
-		Création du palteau
+		Création du plateau
 		==============================================================================
 		"""
 
 		# Matrice contenant les cases et dans ces cases leur contenu
 		self.matrice = {}
 
+		# ===============================================================================================
+		# Cases vides du milieu du plateau
+		# ===============================================================================================
 
 		for y in range(3,7):
 			for x in range(1, 9):
@@ -66,6 +69,7 @@ class plateau:
 		self.matrice[(8, 8)] = self.setDeJeu.getFreePion("tour","blanc")
 
 
+
 	"""
 	==================================================================================
 	Fonctions
@@ -73,30 +77,53 @@ class plateau:
 	"""
 
 
-	def move(self, origin, destination):
+	def move(self, origin: tuple, destination: tuple) -> None:
+		"""
 
+		:param origin: tuple of int *Case de départ*
+		:param destination: tuple of int *Case d'arrivé*
+		:return: None
+
+		Fonction qui permet de bouger un pion, et gère plusieurs cas :
+			- Origin == Destination *Clique sur la même case* : Ne fait rien
+			- Destination == Empty *Déplace sur une case vide* : Interchange le pion et la case vide
+			- Destination == pion *Déplace sur un case pleine et prend le pion* : Se déplace, et retire le pion du plateau, passe son état à False
+
+		"""
+
+		# Si le joueur ne reclique pas sur la meme case, dans le cas donc faire un déplacement
 		if origin != destination:
 
+			# Si cette case n'est pas vide
 			if not "empty" in self.getCase(destination[0], destination[1]).getName():
 
+				# On retire le pion qui va être prit du jeu en passant son état à False
+				self.matrice[(destination[0], destination[1])].setState(False)
+
+				# On met le pion de la case d'origine à la place du pion d'arrivé
 				self.setCase(destination[0], destination[1], self.getCase(origin[0], origin[1]))
+
+				# On vide la case de départ avec la fonction empty(), qui y rajoute un pion vide
 				self.empty(origin[0], origin[1])
 
+			# Si la case est vide, on se contente d'interchanger les cases, la vide devient la pleine et vis et versa
 			else:
 
+				# On récupère les pions pour pas s'embrouiller à cause de l'ordre d'association des variables
 				pionOrigin = self.getCase(origin[0], origin[1])
 				pionDestination = self.getCase(destination[0], destination[1])
+
+				# On échange les cases
 				self.setCase(origin[0], origin[1], pionDestination)
 				self.setCase(destination[0], destination[1], pionOrigin)
 
+		# Si le joueur reclique sur la meme case
 		else:
 
-			print("same")
+			pass
 
 
 	def empty(self, x, y):
-		self.matrice[(x, y)].setState(False)
-		print(self.matrice[(x, y)].getState())
 		self.matrice[(x, y)] = self.setDeJeu.getFreePion("empty","")
 
 	def reinitialize(self):
@@ -124,13 +151,7 @@ class plateau:
 			# Itère pour chaque colonne de l'échiquier, de gauche à droite
 			for colomn in range(1, 9):
 
-					# Nom (id) de la pièce
-					# name = self.matrice[(colomn, row)].getName()
-
-					nom_piece = self.matrice[(colomn, row)]
-
 					# Si la case est censée être vide, on ajoute un blanc à la ligne qui sera affiché plus tard
-					# "empty" in self.matrice[(colomn, row)].getName()
 					if not self.matrice[(colomn, row)]:
 						line += "|" + "".center(18)
 
@@ -185,5 +206,28 @@ class plateau:
 			# Print la bordure basse
 			print("-" * 153)
 
-# plat = plateau()
-# plat.apercu()
+
+	"""
+	==================================================================================
+	RULES
+	==================================================================================
+	"""
+
+	def getPath(self, origin: tuple) -> list:
+		"""
+
+		:param origin: tuple of int *Case*
+		:return: list of tuple of int *Liste des cases où peut bouger le pion*
+
+		Fonction récupérant le plateau à l'état actuel, le pion à bouger, et renvoie toutes les cas sur lesquelles il peut se déplacer.
+		S'arrête toujours au premier pion adversaire pris, et gère la colision avec les pions alliés
+		"""
+
+
+
+
+
+
+
+
+
