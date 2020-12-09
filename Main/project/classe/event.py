@@ -18,7 +18,7 @@ class event:
 	def setCache(self,  newCache): self.cache = newCache
 
 	def apercu(self):
-		print("@" + "-" * 30)
+		print("@ " + "-" * 30)
 		print("| Id     : " + str(self.id))
 		print("| Origin : " + str(self.origin))
 		print("| Action : " + str(self.action))
