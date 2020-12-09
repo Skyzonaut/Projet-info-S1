@@ -3,6 +3,8 @@ from pprint import *
 from classe.plateau import *
 from classe.event import *
 from functools import partial
+# import sys
+# sys.path.append("./classe")
 
 def initPlateau():
 
@@ -37,6 +39,17 @@ def initPlateau():
     console = Canvas(fen, bg='grey', width=(fenX - 950), height=int(fenY))
     console.pack(side=LEFT)
 
+
+    # Text box for debugging
+
+    # scrollbar = Scrollbar(console)
+    # scrollbar.pack(side=RIGHT, fill=Y)
+
+    cons_text = Text(console, bg="black", fg="white", width=(fenX - 950), height=int(fenY))
+    cons_text.place(x=console.winfo_x(), y=console.winfo_y())
+    #
+    # cons_text.config(yscrollcommand=scrollbar.set)
+    # scrollbar.config(command=cons_text.yview)
 
     # Objet plateau qui contient les positions et infos et pions.
     # Utilisant comme repertoire un Set de pion limité
@@ -76,12 +89,12 @@ def initPlateau():
                 newId = id
 
                 bouton = dict_bouton[(tuple[0],tuple[1])]
-
                 # if bouton["bg"] != clicked:
                 #     bouton.config(bg="#aaaaaa")
                 # else:
                 #     bouton.config(bg=normal)
 
+                cons_text.insert(1.0, str(plat.getCase(tuple[0],tuple[1]).getApercu()))
 
                 if event_log[-1].getAction() == "place":
 
@@ -90,7 +103,8 @@ def initPlateau():
 
                     # Comme c'est un click et non un place, ça signifie que ce bouton est
                     # l'origine du mouvement, donc contient le pion à bouger
-                    newEvent.setCache(plat.getCase(tuple[0],tuple[1]).getImage())
+                    if plat.getCase(tuple[0],tuple[1]):
+                        newEvent.setCache(plat.getCase(tuple[0],tuple[1]).getImage())
 
                     # Colorie la case en gris pour indiquer l'origine du mouvement
                     bouton.config(bg="#aaaaaa")
@@ -116,19 +130,26 @@ def initPlateau():
 
                     if image:
 
+                        print("@@@ IMAGE")
+
                         # Retire l'image du bouton de l'ancienne case
                         dict_bouton[former_case].config(image="")
 
-                        # Retire l'image de l'ancienne case
-                        plat.getCase(former_case[0], former_case[1]).setImage("")
+                        # On met l'ancien pion dans la nouvelle case
+                        # plat.setCase(tuple[0],tuple[1], plat.getCase(former_case[0], former_case[1]))
+
+                        plat.move((former_case[0], former_case[1]), (tuple[0],tuple[1]))
+
+                        # On vide l'ancienne case
+                        # plat.empty(former_case[0], former_case[1])
 
                         # Place l'image de l'ancienne case sur la nouvelle
                         bouton.config(image=image)
 
-                        # On met à jour le plateau
-                        plat.getCase(tuple[0],tuple[1]).setImage(image)
+                        plat.apercu()
 
-                newEvent.apercu()
+
+                # newEvent.apercu()
 
                 # On rajoute l'evènement à la liste des évènements
                 event_log.append(newEvent)
@@ -169,8 +190,10 @@ def initPlateau():
     # Actions de fermeture
     def on_closing():
         print("\n--- Fermeture ---")
-        for event in event_log:
-            event.apercu()
+        # for event in event_log:
+        #     event.apercu()
+        # plat.apercu()
+        plat.apercuSet()
         fen.destroy()
 
     # Protocol Handler
@@ -179,17 +202,6 @@ def initPlateau():
     # Stay alive
     fen.mainloop()
 
-
-
-
-def temp(case2):
-
-    piece1 = matrice[case1]
-
-    matrice[case2].setState(False)
-    matrice[case2].setAssociation(False)
-    matrice[case2] = piece1
-    matrice[case1] = self.setDeJeu.getFreePion("empty","")
 
 
 if __name__ == '__main__':
