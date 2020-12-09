@@ -91,10 +91,6 @@ def initPlateau():
                 newId = id
 
                 bouton = dict_bouton[(tuple[0],tuple[1])]
-                # if bouton["bg"] != clicked:
-                #     bouton.config(bg="#aaaaaa")
-                # else:
-                #     bouton.config(bg=normal)
 
                 cons_text.insert(1.0, str(plat.getCase(tuple[0],tuple[1]).getApercu()))
 
@@ -106,6 +102,7 @@ def initPlateau():
                     # Comme c'est un click et non un place, ça signifie que ce bouton est
                     # l'origine du mouvement, donc contient le pion à bouger
                     if plat.getCase(tuple[0],tuple[1]):
+
                         newEvent.setCache(plat.getCase(tuple[0],tuple[1]).getImage())
 
                     # Colorie la case en gris pour indiquer l'origine du mouvement
@@ -177,8 +174,6 @@ def initPlateau():
                                 image=photo,
                                     command=partial(move, (x, y)))
 
-            # bouton.bind("<Button-3>", partial(rightClick, ((x, y))))
-
             # Et pour finir on place le bouton sur le canvas pour l'afficher
             bouton.place(x=(x-1)*echiquier.winfo_reqwidth()/8, y=(y-1)*echiquier.winfo_reqheight()/8)
 
@@ -195,7 +190,7 @@ def initPlateau():
         # for event in event_log:
         #     event.apercu()
         # plat.apercu()
-        plat.apercuSet()
+        # plat.apercuSet()
         fen.destroy()
 
     # Protocol Handler
