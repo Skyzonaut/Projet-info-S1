@@ -38,6 +38,8 @@ def initPlateau():
     # Console, Canvas sur lequel placer les textes et autres commandes, lui-meme placé sur la fenêtre fen.
     console = Canvas(fen, bg='grey', width=(fenX - 950), height=int(fenY))
     console.pack(side=LEFT)
+    # label_title = Label(console,text="Aloooooo")
+    # label_title.pack()
 
 
     # Text box for debugging
