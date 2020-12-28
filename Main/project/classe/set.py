@@ -48,7 +48,7 @@ class set:
 
 			for i in range(1,66):
 				name = f"{i}_empty"
-				piece = pion(name, "", "", False, None)
+				piece = pion(name, "empty", "None", False, None)
 				self.listePions[name] = piece
 
 		root.destroy()
