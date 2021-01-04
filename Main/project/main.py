@@ -9,6 +9,8 @@ from threading import *
 # import sys
 # sys.path.append("./classe")
 
+# TODO: Dossier présentation du code
+
 class initPlateau(Frame):
 
         def __init__(self, parent):
@@ -25,8 +27,11 @@ class initPlateau(Frame):
             # Event id generator
             self.id = 1
 
+            # Nombre du tour
+            self.tour = 1
+
             # Event history
-            initEvent = event(0, (0,0), "place")
+            initEvent = event("0", (0,0), "place")
             self.event_log = [initEvent]
 
             # Objet plateau qui contient les positions et infos et pions.
@@ -44,10 +49,21 @@ class initPlateau(Frame):
             # Valeur permettant d'alterner les couleurs
             self.black = False
 
+            # Echec ou non, permet de bloquer le jeu si il y a un echec
+            self.echec = False
+
             # Valeur contenant le tour actuel
             self.tourWhite = True
             self.textTourStringVar = StringVar()
             self.textTourStringVar.set("LES BLANCS COMMENCENT")
+
+            # Valeur contenant le panneau d'affichage d'état du jeu
+            self.textAffichage = StringVar()
+            self.textAffichage.set("")
+
+            # Valeur contenant le numéro du tour
+            self.textNbTour = StringVar()
+            self.textNbTour.set(str(self.tour))
 
             # # Protocol Handler
             # parent.protocol("WM_DELETE_WINDOW", on_closing)
@@ -63,21 +79,27 @@ class initPlateau(Frame):
             self.echiquier = Canvas(self.parent, bg='white', width=950, height=int(self.fenY))
             self.echiquier.pack(side=LEFT)
 
-
             # Console, Canvas sur lequel placer les textes et autres commandes, lui-meme placé sur la fenêtre fen.
             self.console = Canvas(self.parent, bg="grey", width=(self.fenX - 950), height=int(self.fenY))
             self.console.pack(side=LEFT)
+
+            self.nbTour = Label(self.console, width=45, height=2)
+            self.nbTour['textvariable'] = self.textNbTour
+            self.nbTour['fg'] = "black"
+            self.nbTour['bg'] = "#3BCB38"
+            self.nbTour.place(x=self.console.winfo_x()+11, y=8)
 
             self.tourLabel = Label(self.console, width=45, height=12)
             self.tourLabel['textvariable'] = self.textTourStringVar
             self.tourLabel['fg'] = "black"
             self.tourLabel['bg'] = "white"
-            self.tourLabel.place(x=self.console.winfo_x()+12, y=5)
+            self.tourLabel.place(x=self.console.winfo_x()+11, y=55)
 
-            self.button1 = Button(self.console, text="BOUTON1", width=45, height=2, command= self.game)
-            self.button1['fg'] = "white"
-            self.button1['bg'] = "black"
-            self.button1.place(x=self.console.winfo_x()+11, y=200)
+            self.affichage = Label(self.console, width=45, height=12)
+            self.affichage['textvariable'] = self.textAffichage
+            self.affichage['fg'] = "black"
+            self.affichage['bg'] = "#789FDE"
+            self.affichage.place(x=self.console.winfo_x()+12, y=600)
 
             self.quitButton = Button(self.console, text="QUIT", width=45, height=4, command=self.on_closing)
             self.quitButton['borderwidth'] = 3
@@ -136,19 +158,24 @@ class initPlateau(Frame):
 
             self.bouton = self.dict_bouton[(tuple[0], tuple[1])]
 
+            self.couleurPion = ""
+
             # Print piece on the console if enable
             # self.cons_text.insert(1.0, str(self.plat.getCase(tuple[0], tuple[1]).getApercu()))
 
-            if self.event_log[-1].getAction() == "place":
+            # if not self.echec or self.echec:
+
+            if self.event_log[-1].getAction() != "click":
 
                 if self.tourCouleurVerificateur(self.plat.getCase(tuple[0], tuple[1]).getCouleur(), self.tourWhite):
 
                     # On crée un nouvel évènement de click simple
-                    self.newEvent = event(self.newId, tuple, "click")
+                    self.newEvent = event(str(self.newId), tuple, "click")
 
                     # Comme c'est un click et non un place, ça signifie que ce bouton est
                     # l'origine du mouvement, donc contient le pion à bouger
                     if self.plat.getCase(tuple[0], tuple[1]):
+
                         self.newEvent.setCache(self.plat.getCase(tuple[0], tuple[1]).getImage())
 
                     # Colorie la case en gris pour indiquer l'origine du mouvement
@@ -157,18 +184,22 @@ class initPlateau(Frame):
                     self.possibleMoves = self.plat.getPath(tuple)
 
                     for case in self.possibleMoves:
+
                         self.dict_bouton[case].config(bg="#CD4C4C")
 
                     self.newEvent.setTrace(self.possibleMoves)
 
-                else:
+                    # On récupère la couleur du pion à jouer
+                    self.couleurPion = self.plat.getCase(tuple[0], tuple[1]).getCouleur()
 
-                    print("C'est aux", "blancs" if self.tourWhite else "Noirs", "de Jouer")
+                else:
+                    
+                    print("C'est aux", "blanc" if self.tourWhite else "noirs", "de jouer")
 
             else:
 
                 # On crée un nouvel évènement de placement.
-                self.newEvent = event(self.newId, tuple, "place")
+                self.newEvent = event(str(self.newId), tuple, "place")
 
                 # L'évènement est un event de placement, donc l'évènement juste avant
                 # est un évènement d'origine (de click) donc on va chercher l'image
@@ -184,7 +215,11 @@ class initPlateau(Frame):
                 # Et on lui remet sa couleur de base. Puisque
                 self.dict_bouton[self.former_case].config(bg=self.former_button_normal_color)
 
+                # On récupère la couleur du pion qui a été sélectionné
+                self.couleurPion = self.plat.getCase(self.former_case[0], self.former_case[1]).getCouleur()
+
                 for traceCase in self.event_log[-1].getTrace():
+
                     self.dict_bouton[traceCase].config(bg=self.coul_bouton[traceCase])
 
                 if self.image:
@@ -210,31 +245,78 @@ class initPlateau(Frame):
                         self.tourLabel['fg'] = "black" if self.tourWhite else "white"
                         self.tourLabel['bg'] = "white" if self.tourWhite else "black"
 
+                        self.tour += 1
+                        self.textNbTour.set(str(self.tour))
+
                     else:
 
                         print("Impossible move")
 
 
-
-            # self.newEvent.apercu()
+            self.newEvent.apercu()
 
             # On rajoute l'evènement à la liste des évènements
             self.event_log.append(self.newEvent)
+
+            print("@@@@@@", self.plat.checkMate("blanc"))
+            print("@@@@@@", self.plat.checkMate("noir"))
+
+            self.listPionEchec = self.plat.checkEchec(self.couleurPion)
+
+            if self.listPionEchec:
+
+                self.dict_bouton[self.plat.getRoi(self.couleurPion)].config(bg="#CD4C4C")
+
+                # self.newEchecEvent = event(str(self.newId) + "_echec", tuple, "echec")
+                # self.newEchecEvent.setTrace(self.listPionEchec)
+                # self.newEchecEvent.apercu()
+                # self.event_log.append(self.newEchecEvent)
+
+                for pionEchec in self.listPionEchec:
+                    self.dict_bouton[pionEchec].config(bg="#e08f38")
+
+                self.textAffichage.set("ECHEC")
+                self.affichage['fg'] = "white"
+                self.affichage['bg'] = "#A02B2B"
+                self.echec = True
+
+            else:
+                #
+                # self.original_color = self.coul_bouton[self.plat.getRoi(self.couleurPion)]
+                # self.dict_bouton[self.plat.getRoi(self.couleurPion)].config(bg=self.original_color)
+
+                self.textAffichage.set("")
+                self.affichage['fg'] = "black"
+                self.affichage['bg'] = "#789FDE"
+
+            if self.plat.checkMate("blanc") == "mat":
+
+                self.textAffichage.set("ECHEC ET MAT\nLes Noirs l'emportent")
+                self.affichage['fg'] = "black"
+                self.affichage['bg'] = "#A02B2B"
+
+            if self.plat.checkMate("noir") == "mat":
+
+                self.textAffichage.set("ECHEC ET MAT\nLes Blancs l'emportent")
+                self.affichage['fg'] = "black"
+                self.affichage['bg'] = "#A02B2B"
 
             # On incrémente la chaine qui sert à créer le nom/id des évènements pour le prochain
             # évènement. Toujours de x + 1
             self.id += 1
 
 
-
         def tourCouleurVerificateur(self, couleur, boolean):
-            print("func(couleur)", couleur, "func(bool)", boolean)
+
             if (couleur == "blanc" or couleur == None) and boolean:
+
                 return True
+
             elif (couleur == "noir" or couleur == None) and not boolean:
+
                 return True
-            else:
-                return False
+
+            else: return False
 
 
         def game(self):
@@ -246,6 +328,7 @@ class initPlateau(Frame):
             #     if oldTime != now:
             #         print(now)
             #         oldTime = now
+
 
         # Actions de fermeture
         def on_closing(self):

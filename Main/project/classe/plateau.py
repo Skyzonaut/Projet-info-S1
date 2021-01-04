@@ -38,6 +38,8 @@ class Plateau:
 		# Blanc
 		# ===============================================================================================
 
+		# TODO: Ajouter initialisation différente (placement prédéfini de pièces)
+
 		for i in range(1, 9):
 			newPion = self.setDeJeu.getFreePion("pion", "noir")
 			self.matrice[(i, 2)] = newPion
@@ -128,17 +130,117 @@ class Plateau:
 	def empty(self, x, y):
 		self.matrice[(x, y)] = self.setDeJeu.getFreePion("empty", "")
 
-	def reinitialize(self):
-		self.__init__()
 
-	def getCase(self, x, y):
-		return self.matrice[(x, y)]
+	def reinitialize(self): self.__init__()
 
-	def setCase(self, x, y, content):
-		self.matrice[(x, y)] = content
 
-	def apercuSet(self):
-		self.setDeJeu.apercu()
+	def getMatrice(self): return self.matrice
+
+
+	def getMatriceByCouleur(self, couleur):
+
+		returnDict = []
+
+		for coordPion, pion in self.matrice.items():
+
+			if pion.getCouleur() == couleur:
+
+				returnDict.append(coordPion)
+
+		return returnDict
+
+
+	def getCase(self, x, y): return self.matrice[(x, y)]
+
+
+	def setCase(self, x, y, content): self.matrice[(x, y)] = content
+
+
+	def getRoi(self, couleur):
+
+		for coord, pion in self.matrice.items():
+
+			if pion.getType() == "roi" and pion.getCouleur() == couleur:
+
+				return coord
+
+
+	# def getDangerMatrice(self, couleur):
+	#
+	# 	listDangerCase = []
+	# 	ennemiCouleur = "blanc" if couleur == "noir" else "noir"
+	#
+	# 	for pion in self.getMatriceByCouleur(ennemiCouleur):
+	#
+	# 		for dangerCase in self.getPath(pion):
+	#
+	# 			if dangerCase not in listDangerCase:
+	#
+	# 				listDangerCase.append(dangerCase)
+	#
+	# 	return listDangerCase
+
+	def checkEchec(self, couleur):
+
+		listPieceEchec = []
+		ennemiCouleur = "blanc" if couleur == "noir" else "noir"
+		coordRoi = self.getRoi(couleur)
+
+		for coordPion in self.getMatriceByCouleur(ennemiCouleur):
+
+			if coordRoi in self.getPath(coordPion):
+
+				listPieceEchec.append(coordPion)
+
+		return listPieceEchec
+
+
+	def checkMate(self, couleur):
+
+		print(couleur, "(------------------------------------------------------")
+
+		if self.checkEchec(couleur):
+
+			ennemiCouleur = "blanc" if couleur == "noir" else "noir"
+			listePieceEchec = self.getMatriceByCouleur(ennemiCouleur)
+			listeMovePieceEchec = []
+			listeMoveRoiSave = []
+
+			for piece in listePieceEchec:
+				piecePath = self.getPath(piece, True)
+				for casePath in piecePath:
+					if casePath not in listeMovePieceEchec:
+						listeMovePieceEchec.append(casePath)
+
+
+			if listeMovePieceEchec:
+
+				print("listemovePieceEchec", listeMovePieceEchec)
+
+				listeMoveRoi = self.getPath(self.getRoi(couleur))
+				print("Liste move roi", listeMoveRoi)
+
+				for casePathRoi in listeMoveRoi:
+
+					if casePathRoi not in listeMovePieceEchec:
+
+						print("Un move possible :", casePathRoi)
+						listeMoveRoiSave.append(casePathRoi)
+
+				print("listeMoveRoiSave", listeMoveRoiSave)
+				if listeMoveRoiSave:
+
+					return listeMoveRoiSave
+
+				else:
+					return "mat"
+
+		else:
+
+			return "no-echec"
+
+	def apercuSet(self): self.setDeJeu.apercu()
+
 
 	def apercu(self):
 
@@ -215,9 +317,8 @@ class Plateau:
 	==================================================================================
 	"""
 
-	def getPath(self, origin: tuple) -> list:
+	def getPath(self, origin: tuple, withTrace=False) -> list:
 		"""
-
 		:param origin: tuple of int *Case*
 		:return: list of tuple of int *Liste des cases où peut bouger le pion*
 
@@ -234,7 +335,7 @@ class Plateau:
 		# PION
 		# ==============================================================================================================
 
-		if pionSelected.getType().lower() == "pion":
+		if pionSelected.getType().lower() == "pion" and not withTrace:
 
 			left = -1
 			right = +1
@@ -245,11 +346,12 @@ class Plateau:
 				fw = +1
 
 				if origin[1] == 8:
+
 					return listPossibleMove
 
 				if "empty" in self.getCase(origin[0], origin[1] + fw).getName():
 
-					if origin[1] == 2:
+					if origin[1] == 2 and "empty" in self.getCase(origin[0], origin[1] + 2*fw).getName():
 
 						listPossibleMove = [(origin[0] + stay, origin[1] + fw), (origin[0] + stay, origin[1] + (2*fw))]
 
@@ -276,11 +378,12 @@ class Plateau:
 				fw = -1
 
 				if origin[1] == 1:
+
 					return listPossibleMove
 
 				if "empty" in self.getCase(origin[0], origin[1] + fw).getName():
 
-					if origin[1] == 7:
+					if origin[1] == 7 and "empty" in self.getCase(origin[0], origin[1] + 2*fw).getName():
 
 						listPossibleMove = [(origin[0] + stay, origin[1] + fw), (origin[0] + stay, origin[1] + (2*fw))]
 
@@ -301,6 +404,67 @@ class Plateau:
 						and self.getCase(origin[0] + right, origin[1] + fw).getCouleur() != pionSelected.getCouleur():
 
 						listPossibleMove.append((origin[0] + right, origin[1] + fw))
+
+		if pionSelected.getType().lower() == "pion" and withTrace:
+
+			left = -1
+			right = +1
+			stay = 0
+
+			if pionSelected.getCouleur() == "noir":
+
+				fw = +1
+
+				if origin[1] == 8:
+
+					return listPossibleMove
+
+				if "empty" in self.getCase(origin[0], origin[1] + fw).getName():
+
+					if origin[1] == 2 and "empty" in self.getCase(origin[0], origin[1] + 2 * fw).getName():
+
+						listPossibleMove = [(origin[0] + stay, origin[1] + fw),
+											(origin[0] + stay, origin[1] + (2 * fw))]
+
+					else:
+
+						listPossibleMove = [(origin[0] + stay, origin[1] + fw)]
+
+				if 0 < origin[0] + left < 9:
+
+					listPossibleMove.append((origin[0] + left, origin[1] + fw))
+
+				if 0 < origin[0] + right < 9:
+
+					listPossibleMove.append((origin[0] + right, origin[1] + fw))
+
+			elif pionSelected.getCouleur() == "blanc":
+
+				fw = -1
+
+				if origin[1] == 1:
+
+					return listPossibleMove
+
+				if "empty" in self.getCase(origin[0], origin[1] + fw).getName():
+
+					if origin[1] == 7 and "empty" in self.getCase(origin[0], origin[1] + 2 * fw).getName():
+
+						listPossibleMove = [(origin[0] + stay, origin[1] + fw),
+											(origin[0] + stay, origin[1] + (2 * fw))]
+
+					else:
+
+						listPossibleMove = [(origin[0] + stay, origin[1] + fw)]
+
+				if 0 < origin[0] + left < 9:
+
+					listPossibleMove.append((origin[0] + left, origin[1] + fw))
+
+				if 0 < origin[0] + right < 9:
+
+					listPossibleMove.append((origin[0] + right, origin[1] + fw))
+
 
 		# ==============================================================================================================
 		# CAVALIER
@@ -889,5 +1053,10 @@ class Plateau:
 						else:
 
 							right = False
+		#
+		# for move in listPossibleMove:
+		#
+		# 	print(move)
+
 
 		return listPossibleMove
