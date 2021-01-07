@@ -6,18 +6,19 @@ from functools import partial
 from time import *
 from datetime import *
 from threading import *
-# import sys
-# sys.path.append("./classe")
 
 # TODO: Dossier présentation du code
+# Test
 
 class initPlateau(Frame):
-
         def __init__(self, parent):
 
             Frame.__init__(self, parent)
 
+            print("intitialization")
+
             self.parent = parent
+
             parent.resizable(False, False)
 
             # Valeur indépendantes
@@ -26,7 +27,7 @@ class initPlateau(Frame):
 
             # Event id generator
             self.id = 1
-
+            print(self.id)
             # Nombre du tour
             self.tour = 1
 
@@ -55,8 +56,8 @@ class initPlateau(Frame):
             # Valeur contenant le tour actuel
             self.tourWhite = True
             self.textTourStringVar = StringVar()
-            self.textTourStringVar.set("LES BLANCS COMMENCENT")
-
+            self.textTourStringVar.set("AU TOUR DES BLANCS")
+            print(self.textTourStringVar.get())
             # Valeur contenant le panneau d'affichage d'état du jeu
             self.textAffichage = StringVar()
             self.textAffichage.set("")
@@ -71,6 +72,8 @@ class initPlateau(Frame):
             self.initiateUI()
 
         def initiateUI(self):
+
+            print("InitiateUI")
 
             # Fenetre sur laquelle on placera tous les composants
             self.parent.geometry(str(self.fenX) + "x" + str(self.fenY))
@@ -99,7 +102,13 @@ class initPlateau(Frame):
             self.affichage['textvariable'] = self.textAffichage
             self.affichage['fg'] = "black"
             self.affichage['bg'] = "#789FDE"
-            self.affichage.place(x=self.console.winfo_x()+12, y=600)
+            self.affichage.place(x=self.console.winfo_x()+12, y=520)
+
+            self.restartButton = Button(self.console, text="RESTART GAME", width=45, height=4, command=self.restart)
+            self.restartButton['borderwidth'] = 3
+            self.restartButton['fg'] = "black"
+            self.restartButton['bg'] = "grey"
+            self.restartButton.place(x=self.console.winfo_x()+11, y=720)
 
             self.quitButton = Button(self.console, text="QUIT", width=45, height=4, command=self.on_closing)
             self.quitButton['borderwidth'] = 3
@@ -114,6 +123,7 @@ class initPlateau(Frame):
 
         def create_grid(self):
 
+            print("Create Grid")
             # On parcours de gauche à droite, puis de haut en bas
             # Du bas vers le haut
             self.y = 1
@@ -295,6 +305,8 @@ class initPlateau(Frame):
                 self.affichage['fg'] = "black"
                 self.affichage['bg'] = "#A02B2B"
 
+                winPopUp = Tk(className=" ECHECS")
+
             if self.plat.checkMate("noir") == "mat":
 
                 self.textAffichage.set("ECHEC ET MAT\nLes Blancs l'emportent")
@@ -316,7 +328,9 @@ class initPlateau(Frame):
 
                 return True
 
-            else: return False
+            else:
+
+                return False
 
 
         def game(self):
@@ -329,6 +343,13 @@ class initPlateau(Frame):
             #         print(now)
             #         oldTime = now
 
+        def restart(self):
+            print("restart")
+            self.__init__(self.parent)
+            # self.plat.__init__()
+            # self.initiateUI()
+            # self.plat.apercu()
+            # self.on_closing()
 
         # Actions de fermeture
         def on_closing(self):
