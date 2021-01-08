@@ -1,5 +1,6 @@
 from .pion import *
 from .set import *
+from math import *
 
 class Plateau:
 
@@ -152,6 +153,7 @@ class Plateau:
 
 	def getCase(self, x, y): return self.matrice[(x, y)]
 
+	def getCaseTuple(self, tuple): return self.matrice[tuple[0], tuple[1]]
 
 	def setCase(self, x, y, content): self.matrice[(x, y)] = content
 
@@ -197,42 +199,131 @@ class Plateau:
 
 	def checkMate(self, couleur):
 
-		print(couleur, "(------------------------------------------------------")
-
 		if self.checkEchec(couleur):
 
+			roi = self.getRoi(couleur)
 			ennemiCouleur = "blanc" if couleur == "noir" else "noir"
-			listePieceEchec = self.getMatriceByCouleur(ennemiCouleur)
-			listeMovePieceEchec = []
+			listePieceEnnemie = self.getMatriceByCouleur(ennemiCouleur)
+			listeMovePieceEnnemie = []
+			listePieceEchec = []
 			listeMoveRoiSave = []
 
-			for piece in listePieceEchec:
+			for piece in listePieceEnnemie:
+
 				piecePath = self.getPath(piece, True)
+
+				if roi in piecePath:
+
+					listePieceEchec.append(piece)
+
 				for casePath in piecePath:
-					if casePath not in listeMovePieceEchec:
-						listeMovePieceEchec.append(casePath)
 
+					if casePath not in listeMovePieceEnnemie:
 
-			if listeMovePieceEchec:
+						listeMovePieceEnnemie.append(casePath)
 
-				print("listemovePieceEchec", listeMovePieceEchec)
+			if listeMovePieceEnnemie:
 
-				listeMoveRoi = self.getPath(self.getRoi(couleur))
-				print("Liste move roi", listeMoveRoi)
+				listeMoveRoi = self.getPath(roi)
 
 				for casePathRoi in listeMoveRoi:
 
-					if casePathRoi not in listeMovePieceEchec:
+					if casePathRoi not in listeMovePieceEnnemie:
 
-						print("Un move possible :", casePathRoi)
-						listeMoveRoiSave.append(casePathRoi)
+						listeMoveRoiSave.append((roi, casePathRoi))
 
-				print("listeMoveRoiSave", listeMoveRoiSave)
+
+				def pathFinding(origin, target, takeOrigin=False):
+					"""
+					Args:
+						origin: Pièce d'où part le pathfinding
+						target: Pièce qu'il doit atteindre
+					"""
+
+					listPathBetween = []
+
+					xOrigin = origin[0]
+					yOrigin = origin[1]
+					xTarget = target[0]
+					yTarget = target[1]
+
+					highestScoreMove = []
+					plusOrigin = 0 if not takeOrigin else 1
+
+					if xOrigin == xTarget:
+						yDistance = yOrigin - yTarget
+						for y in range(1, abs(yDistance) + plusOrigin):
+							if yDistance > 0:
+								highestScoreMove.append((0, y))
+							else:
+								highestScoreMove.append((0, -y))
+
+					if yOrigin == yTarget:
+						xDistance = xOrigin - xTarget
+						for x in range(1, abs(xDistance) + plusOrigin):
+							if xDistance > 0:
+								highestScoreMove.append((x, 0))
+							else:
+								highestScoreMove.append((-x, 0))
+
+					xDistance = xOrigin - xTarget
+					yDistance = yOrigin - yTarget
+
+					if abs(xDistance) == abs(yDistance):
+						negX = 0
+						negY = 0
+
+						if xDistance > 0 and yDistance > 0:
+							negX = 1
+							negY = 1
+
+						elif xDistance > 0 and yDistance < 0:
+							negX = 1
+							negY = -1
+
+						elif xDistance < 0 and yDistance < 0:
+							negX = -1
+							negY = -1
+
+						elif xDistance < 0 and yDistance > 0:
+							negX = -1
+							negY = 1
+
+						for xy in range(1, abs(xDistance) + plusOrigin):
+							highestScoreMove.append((xy*negX, xy*negY))
+
+					return highestScoreMove
+
+				def getCasePathFinding(origin, target, takeOrigin=False):
+
+					listPathFinding = pathFinding(origin, target, takeOrigin)
+					listCasePathFinding = []
+
+					for path in listPathFinding:
+
+						listCasePathFinding.append((path[0] + target[0], path[1] + target[1]))
+
+					return listCasePathFinding
+
+				for pieceEchec in listePieceEchec:
+					# print("PieceEchec", pieceEchec)
+
+					for pieceSauveteur in self.getMatriceByCouleur(couleur):
+
+						for movePieceSauveteur in self.getPath(pieceSauveteur):
+
+							if self.getCaseTuple(pieceSauveteur).getType() != "roi":
+
+								if movePieceSauveteur in getCasePathFinding(pieceEchec, roi, True):
+
+									listeMoveRoiSave.append((pieceSauveteur, movePieceSauveteur))
+
 				if listeMoveRoiSave:
 
 					return listeMoveRoiSave
 
 				else:
+
 					return "mat"
 
 		else:
