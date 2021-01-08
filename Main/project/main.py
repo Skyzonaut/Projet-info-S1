@@ -11,6 +11,7 @@ from threading import *
 # Test
 
 class initPlateau(Frame):
+
         def __init__(self, parent):
 
             Frame.__init__(self, parent)
@@ -52,6 +53,8 @@ class initPlateau(Frame):
 
             # Echec ou non, permet de bloquer le jeu si il y a un echec
             self.echec = False
+            self.pionWhitePlayEchec = []
+            self.pionBlackPlayEchec = []
 
             # Valeur contenant le tour actuel
             self.tourWhite = True
@@ -222,7 +225,7 @@ class initPlateau(Frame):
                 # On récupère sa couleur de base (originelle)
                 self.former_button_normal_color = self.coul_bouton[self.former_case]
 
-                # Et on lui remet sa couleur de base. Puisque
+                # Et on lui remet sa couleur de base.
                 self.dict_bouton[self.former_case].config(bg=self.former_button_normal_color)
 
                 # On récupère la couleur du pion qui a été sélectionné
@@ -263,27 +266,24 @@ class initPlateau(Frame):
                         print("Impossible move")
 
 
-            self.newEvent.apercu()
+            # TODO : Bloquer le jeu lorsqu'il y a un echec
+            # TODO : Bloquer le jeu lorsqu'il y a un echec && MATH
 
-            # On rajoute l'evènement à la liste des évènements
-            self.event_log.append(self.newEvent)
 
-            print("@@@@@@", self.plat.checkMate("blanc"))
-            print("@@@@@@", self.plat.checkMate("noir"))
+            self.listPionBlackPlayEchec = self.plat.checkEchec("blanc")
+            self.listPionWhitePlayEchec = self.plat.checkEchec("noir")
 
-            self.listPionEchec = self.plat.checkEchec(self.couleurPion)
+            self.echecTrace = {"whitePlayEchec" : [], "blackPlayEchec" : []}
 
-            if self.listPionEchec:
+            if self.listPionBlackPlayEchec:
 
-                self.dict_bouton[self.plat.getRoi(self.couleurPion)].config(bg="#CD4C4C")
+                self.dict_bouton[self.plat.getRoi("blanc")].config(bg="#CD4C4C")
 
-                # self.newEchecEvent = event(str(self.newId) + "_echec", tuple, "echec")
-                # self.newEchecEvent.setTrace(self.listPionEchec)
-                # self.newEchecEvent.apercu()
-                # self.event_log.append(self.newEchecEvent)
+                for pionEchec in self.listPionBlackPlayEchec:
 
-                for pionEchec in self.listPionEchec:
                     self.dict_bouton[pionEchec].config(bg="#e08f38")
+
+                self.echecTrace["blackPlayEchec"] = self.listPionBlackPlayEchec
 
                 self.textAffichage.set("ECHEC")
                 self.affichage['fg'] = "white"
@@ -291,15 +291,80 @@ class initPlateau(Frame):
                 self.echec = True
 
             else:
-                #
-                # self.original_color = self.coul_bouton[self.plat.getRoi(self.couleurPion)]
-                # self.dict_bouton[self.plat.getRoi(self.couleurPion)].config(bg=self.original_color)
+
+                self.original_color = self.coul_bouton[self.plat.getRoi("blanc")]
+                self.dict_bouton[self.plat.getRoi("blanc")].config(bg=self.original_color)
+
+                self.echecTraceToEmpty = self.event_log[-1].getEchecTrace()
+
+                if self.echecTraceToEmpty:
+
+                    for pionEchec in self.echecTraceToEmpty["blackPlayEchec"]:
+
+                        # On récupère sa couleur de base (originelle)
+                        self.pionEchecOriginalColor = self.coul_bouton[pionEchec]
+
+                        # Et on lui remet sa couleur de base.
+                        self.dict_bouton[pionEchec].config(bg=self.pionEchecOriginalColor)
 
                 self.textAffichage.set("")
                 self.affichage['fg'] = "black"
                 self.affichage['bg'] = "#789FDE"
 
-            if self.plat.checkMate("blanc") == "mat":
+            if self.listPionWhitePlayEchec:
+
+                self.dict_bouton[self.plat.getRoi("noir")].config(bg="#CD4C4C")
+
+                for pionEchec in self.listPionWhitePlayEchec:
+
+                    self.dict_bouton[pionEchec].config(bg="#e08f38")
+
+                self.echecTrace["whitePlayEchec"] = self.listPionWhitePlayEchec
+
+                self.textAffichage.set("ECHEC")
+                self.affichage['fg'] = "white"
+                self.affichage['bg'] = "#A02B2B"
+                self.echec = True
+
+            else:
+
+                self.original_color = self.coul_bouton[self.plat.getRoi("noir")]
+                self.dict_bouton[self.plat.getRoi("noir")].config(bg=self.original_color)
+
+                self.echecTraceToEmpty = self.event_log[-1].getEchecTrace()
+
+                if self.echecTraceToEmpty:
+
+                    for pionEchec in self.echecTraceToEmpty["whitePlayEchec"]:
+
+                        # On récupère sa couleur de base (originelle)
+                        self.pionEchecOriginalColor = self.coul_bouton[pionEchec]
+
+                        # Et on lui remet sa couleur de base.
+                        self.dict_bouton[pionEchec].config(bg=self.pionEchecOriginalColor)
+
+                self.textAffichage.set("")
+                self.affichage['fg'] = "black"
+                self.affichage['bg'] = "#789FDE"
+
+            checkMateWhiteTestResult = self.plat.checkMate("blanc")
+            checkMateBlackTestResult = self.plat.checkMate("noir")
+
+
+            # =============================================================================================
+            # Check echec et mats
+            # =============================================================================================
+
+            self.newEventSauveteur = {
+                "whiteSaver" : [],
+                "blackSaver" : [],
+                "whiteSaverTrace" : [],
+                "blackSaverTrace" : []
+            }
+
+            # White Test Echec ----------------------------------------------------------------------------
+
+            if checkMateWhiteTestResult == "mat":
 
                 self.textAffichage.set("ECHEC ET MAT\nLes Noirs l'emportent")
                 self.affichage['fg'] = "black"
@@ -307,15 +372,117 @@ class initPlateau(Frame):
 
                 winPopUp = Tk(className=" ECHECS")
 
-            if self.plat.checkMate("noir") == "mat":
+            elif type(checkMateWhiteTestResult) == list:
+
+                listeSauveteurWhite = []
+                listeSauveteurWhiteTrace = []
+
+                listeMoveRoiSave = checkMateWhiteTestResult
+
+                for el in listeMoveRoiSave:
+
+                    if self.plat.getCaseTuple(el[0]).getType() != 'roi':
+
+                        self.dict_bouton[el[0]].config(bg="#5fb1cf")
+
+                        listeSauveteurWhite.append(el[0])
+
+                        for move in el[1]:
+
+                            self.dict_bouton[el[1]].config(bg="#31cc55")
+
+                            listeSauveteurWhiteTrace.append(el[1])
+
+                self.newEventSauveteur["whiteSaver"] = listeSauveteurWhite
+                self.newEventSauveteur["whiteSaverTrace"] = listeSauveteurWhiteTrace
+
+            elif checkMateWhiteTestResult == "no-echec":
+
+                self.whiteSaverToEmpty = self.event_log[-1].getSauveteur()
+
+                if self.whiteSaverToEmpty:
+
+                    for saver in self.whiteSaverToEmpty["whiteSaver"]:
+                        # On récupère sa couleur de base (originelle)
+                        self.pionEchecOriginalColor = self.coul_bouton[saver]
+
+                        # Et on lui remet sa couleur de base.
+                        self.dict_bouton[saver].config(bg=self.pionEchecOriginalColor)
+
+                    for saverMove in self.whiteSaverToEmpty["whiteSaverTrace"]:
+
+                        # On récupère sa couleur de base (originelle)
+                        self.pionEchecOriginalColor = self.coul_bouton[saverMove]
+
+                        # Et on lui remet sa couleur de base.
+                        self.dict_bouton[saverMove].config(bg=self.pionEchecOriginalColor)
+
+            # Black Test Echec ----------------------------------------------------------------------------
+
+
+            if checkMateBlackTestResult == "mat":
 
                 self.textAffichage.set("ECHEC ET MAT\nLes Blancs l'emportent")
                 self.affichage['fg'] = "black"
                 self.affichage['bg'] = "#A02B2B"
 
+            elif type(checkMateBlackTestResult) == list:
+
+                listeSauveteurBlack = []
+                listeSauveteurBlackTrace = []
+
+                listeMoveRoiSave = checkMateBlackTestResult
+
+                for el in listeMoveRoiSave:
+
+                    if self.plat.getCaseTuple(el[0]).getType() != 'roi':
+
+                        self.dict_bouton[el[0]].config(bg="#5fb1cf")
+
+                        listeSauveteurBlack.append(el[0])
+
+                        for move in el[1]:
+
+                            self.dict_bouton[el[1]].config(bg="#31cc55")
+                            listeSauveteurBlackTrace.append(el[1])
+
+                self.newEventSauveteur["blackSaver"] = listeSauveteurBlack
+                self.newEventSauveteur["blackSaverTrace"] = listeSauveteurBlackTrace
+
+            elif checkMateBlackTestResult == "no-echec":
+
+                self.blackSaverToEmpty = self.event_log[-1].getSauveteur()
+
+                if self.blackSaverToEmpty:
+
+                    for saver in self.blackSaverToEmpty["blackSaver"]:
+                        # On récupère sa couleur de base (originelle)
+                        self.pionEchecOriginalColor = self.coul_bouton[saver]
+
+                        # Et on lui remet sa couleur de base.
+                        self.dict_bouton[saver].config(bg=self.pionEchecOriginalColor)
+
+                    for saverMove in self.blackSaverToEmpty["blackSaverTrace"]:
+                        # On récupère sa couleur de base (originelle)
+                        self.pionEchecOriginalColor = self.coul_bouton[saverMove]
+
+                        # Et on lui remet sa couleur de base.
+                        self.dict_bouton[saverMove].config(bg=self.pionEchecOriginalColor)
+
+
+            self.newEvent.setSauveteur(self.newEventSauveteur)
+            self.newEvent.setEchecTrace(self.echecTrace)
+            self.newEvent.apercu()
+
+            # On rajoute l'evènement à la liste des évènements
+            self.event_log.append(self.newEvent)
+
+
             # On incrémente la chaine qui sert à créer le nom/id des évènements pour le prochain
             # évènement. Toujours de x + 1
             self.id += 1
+            #
+            # self.plat.apercu()
 
 
         def tourCouleurVerificateur(self, couleur, boolean):
@@ -375,8 +542,8 @@ if __name__ == '__main__':
     #         if oldTime != now:
     #             print(now)
     #             oldTime = now
-
-
+    #
+    #
     # control_thread = Thread(target=run, daemon=True)
     game = initPlateau(root)
     # control_thread.start()
