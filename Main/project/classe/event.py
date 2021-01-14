@@ -6,7 +6,7 @@ class event:
 	"""
 	def __init__(self, _id: int,
 				 _origin: tuple,
-				 _action: String,
+				 _action: str,
 				 _cache=None,
 				 _trace=None,
 				 _echecTrace=None,
