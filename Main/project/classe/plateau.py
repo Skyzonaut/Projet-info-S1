@@ -157,8 +157,13 @@ class Plateau:
 
 	def setCase(self, x, y, content): self.matrice[(x, y)] = content
 
-
 	def getRoi(self, couleur):
+		"""
+		Récupère la position du roi de la couleur donnée
+
+		Args:
+			couleur: Couleur du roi à chercher. "noir" ou "blanc"
+		"""
 
 		for coord, pion in self.matrice.items():
 
@@ -182,6 +187,90 @@ class Plateau:
 	#
 	# 	return listDangerCase
 
+	def pathFinding(self, origin: tuple, target: tuple, takeOrigin=False):
+		"""
+		Récupère la trajectoire entre une pièce @origin et une pièce @target, stocké en case de différence.
+
+		Ex : (-1,-2) -> (Une case à gauche, Deux case vers le haut)
+
+		Args:
+			origin: Pièce d'où part le pathfinding
+			target: Pièce qu'il doit atteindre
+		"""
+
+		listPathBetween = []
+
+		xOrigin = origin[0]
+		yOrigin = origin[1]
+		xTarget = target[0]
+		yTarget = target[1]
+
+		highestScoreMove = []
+		plusOrigin = 0 if not takeOrigin else 1
+
+		if xOrigin == xTarget:
+			yDistance = yOrigin - yTarget
+			for y in range(1, abs(yDistance) + plusOrigin):
+				if yDistance > 0:
+					highestScoreMove.append((0, y))
+				else:
+					highestScoreMove.append((0, -y))
+
+		if yOrigin == yTarget:
+			xDistance = xOrigin - xTarget
+			for x in range(1, abs(xDistance) + plusOrigin):
+				if xDistance > 0:
+					highestScoreMove.append((x, 0))
+				else:
+					highestScoreMove.append((-x, 0))
+
+		xDistance = xOrigin - xTarget
+		yDistance = yOrigin - yTarget
+
+		if abs(xDistance) == abs(yDistance):
+			negX = 0
+			negY = 0
+
+			if xDistance > 0 and yDistance > 0:
+				negX = 1
+				negY = 1
+
+			elif xDistance > 0 and yDistance < 0:
+				negX = 1
+				negY = -1
+
+			elif xDistance < 0 and yDistance < 0:
+				negX = -1
+				negY = -1
+
+			elif xDistance < 0 and yDistance > 0:
+				negX = -1
+				negY = 1
+
+			for xy in range(1, abs(xDistance) + plusOrigin):
+				highestScoreMove.append((xy*negX, xy*negY))
+
+		return highestScoreMove
+
+	def getCasePathFinding(self, origin: tuple, target: tuple, takeOrigin=False):
+		"""
+		Récupère les cases sur la trajectoire entre une case @origin et une case @target.
+
+		Args:
+			origin: Pièce d'où part le pathfinding
+			target: Pièce qu'il doit atteindre
+			takeOrigin: True si la trajectoire doit contenir la @target (cible), False si elle doit s'arrêter avant
+		"""
+
+		listPathFinding = self.pathFinding(origin, target, takeOrigin)
+		listCasePathFinding = []
+
+		for path in listPathFinding:
+
+			listCasePathFinding.append((path[0] + target[0], path[1] + target[1]))
+
+		return listCasePathFinding
+
 	def checkEchec(self, couleur):
 
 		listPieceEchec = []
@@ -196,7 +285,6 @@ class Plateau:
 
 		return listPieceEchec
 
-
 	def checkMate(self, couleur):
 
 		if self.checkEchec(couleur):
@@ -210,7 +298,7 @@ class Plateau:
 
 			for piece in listePieceEnnemie:
 
-				piecePath = self.getPath(piece, True)
+				piecePath = self.getPath(piece, True, takeFriends=True)
 
 				if roi in piecePath:
 
@@ -233,80 +321,8 @@ class Plateau:
 						listeMoveRoiSave.append((roi, casePathRoi))
 
 
-				def pathFinding(origin, target, takeOrigin=False):
-					"""
-					Args:
-						origin: Pièce d'où part le pathfinding
-						target: Pièce qu'il doit atteindre
-					"""
-
-					listPathBetween = []
-
-					xOrigin = origin[0]
-					yOrigin = origin[1]
-					xTarget = target[0]
-					yTarget = target[1]
-
-					highestScoreMove = []
-					plusOrigin = 0 if not takeOrigin else 1
-
-					if xOrigin == xTarget:
-						yDistance = yOrigin - yTarget
-						for y in range(1, abs(yDistance) + plusOrigin):
-							if yDistance > 0:
-								highestScoreMove.append((0, y))
-							else:
-								highestScoreMove.append((0, -y))
-
-					if yOrigin == yTarget:
-						xDistance = xOrigin - xTarget
-						for x in range(1, abs(xDistance) + plusOrigin):
-							if xDistance > 0:
-								highestScoreMove.append((x, 0))
-							else:
-								highestScoreMove.append((-x, 0))
-
-					xDistance = xOrigin - xTarget
-					yDistance = yOrigin - yTarget
-
-					if abs(xDistance) == abs(yDistance):
-						negX = 0
-						negY = 0
-
-						if xDistance > 0 and yDistance > 0:
-							negX = 1
-							negY = 1
-
-						elif xDistance > 0 and yDistance < 0:
-							negX = 1
-							negY = -1
-
-						elif xDistance < 0 and yDistance < 0:
-							negX = -1
-							negY = -1
-
-						elif xDistance < 0 and yDistance > 0:
-							negX = -1
-							negY = 1
-
-						for xy in range(1, abs(xDistance) + plusOrigin):
-							highestScoreMove.append((xy*negX, xy*negY))
-
-					return highestScoreMove
-
-				def getCasePathFinding(origin, target, takeOrigin=False):
-
-					listPathFinding = pathFinding(origin, target, takeOrigin)
-					listCasePathFinding = []
-
-					for path in listPathFinding:
-
-						listCasePathFinding.append((path[0] + target[0], path[1] + target[1]))
-
-					return listCasePathFinding
 
 				for pieceEchec in listePieceEchec:
-					# print("PieceEchec", pieceEchec)
 
 					for pieceSauveteur in self.getMatriceByCouleur(couleur):
 
@@ -314,9 +330,18 @@ class Plateau:
 
 							if self.getCaseTuple(pieceSauveteur).getType() != "roi":
 
-								if movePieceSauveteur in getCasePathFinding(pieceEchec, roi, True):
+								if self.getCaseTuple(pieceEchec).getType() == "cavalier":
 
-									listeMoveRoiSave.append((pieceSauveteur, movePieceSauveteur))
+									if movePieceSauveteur == pieceEchec:
+
+										listeMoveRoiSave.append((pieceSauveteur, movePieceSauveteur))
+
+								else:
+
+									if movePieceSauveteur in self.getCasePathFinding(pieceEchec, roi, True):
+
+										listeMoveRoiSave.append((pieceSauveteur, movePieceSauveteur))
+
 
 				if listeMoveRoiSave:
 
@@ -408,7 +433,7 @@ class Plateau:
 	==================================================================================
 	"""
 
-	def getPath(self, origin: tuple, withTrace=False) -> list:
+	def getPath(self, origin: tuple, withTrace=False, takeFriends=False, pion=False) -> list:
 		"""
 		:param origin: tuple of int *Case*
 		:return: list of tuple of int *Liste des cases où peut bouger le pion*
@@ -426,7 +451,7 @@ class Plateau:
 		# PION
 		# ==============================================================================================================
 
-		if pionSelected.getType().lower() == "pion" and not withTrace:
+		if pionSelected.getType().lower() == "pion" and not withTrace and not pion:
 
 			left = -1
 			right = +1
@@ -496,7 +521,7 @@ class Plateau:
 
 						listPossibleMove.append((origin[0] + right, origin[1] + fw))
 
-		if pionSelected.getType().lower() == "pion" and withTrace:
+		elif pionSelected.getType().lower() == "pion" and withTrace and not pion:
 
 			left = -1
 			right = +1
@@ -556,6 +581,42 @@ class Plateau:
 
 					listPossibleMove.append((origin[0] + right, origin[1] + fw))
 
+		elif pionSelected.getType().lower() == "pion" and not withTrace and pion:
+
+
+			left = -1
+			right = +1
+			stay = 0
+
+			if pionSelected.getCouleur() == "noir":
+
+				fw = +1
+
+				if origin[1] == 1:
+					return listPossibleMove
+
+				if 0 < origin[0] + left < 9:
+					listPossibleMove.append((origin[0] + left, origin[1] + fw))
+
+				if 0 < origin[0] + right < 9:
+
+					listPossibleMove.append((origin[0] + right, origin[1] + fw))
+
+			if pionSelected.getCouleur() == "blanc":
+
+				fw = -1
+
+				if origin[1] == 1:
+
+					return listPossibleMove
+
+				if 0 < origin[0] + left < 9:
+
+					listPossibleMove.append((origin[0] + left, origin[1] + fw))
+
+				if 0 < origin[0] + right < 9:
+
+					listPossibleMove.append((origin[0] + right, origin[1] + fw))
 
 		# ==============================================================================================================
 		# CAVALIER
@@ -579,7 +640,13 @@ class Plateau:
 
 							else:
 
-								if self.getCase(origin[0] + x, origin[1] + y).getCouleur() != pionSelected.getCouleur():
+								if not takeFriends:
+
+									if self.getCase(origin[0] + x, origin[1] + y).getCouleur() != pionSelected.getCouleur():
+
+										listPossibleMove.append((origin[0] + x, origin[1] + y))
+
+								else:
 
 									listPossibleMove.append((origin[0] + x, origin[1] + y))
 
@@ -591,7 +658,12 @@ class Plateau:
 
 							else:
 
-								if self.getCase(origin[0] + x, origin[1] + my).getCouleur() != pionSelected.getCouleur():
+								if not takeFriends:
+
+									if self.getCase(origin[0] + x, origin[1] + my).getCouleur() != pionSelected.getCouleur():
+
+										listPossibleMove.append((origin[0] + x, origin[1] + my))
+								else:
 
 									listPossibleMove.append((origin[0] + x, origin[1] + my))
 
@@ -609,7 +681,13 @@ class Plateau:
 
 							else:
 
-								if self.getCase(origin[0] + x, origin[1] + y).getCouleur() != pionSelected.getCouleur():
+								if not takeFriends:
+
+									if self.getCase(origin[0] + x, origin[1] + y).getCouleur() != pionSelected.getCouleur():
+
+										listPossibleMove.append((origin[0] + x, origin[1] + y))
+
+								else:
 
 									listPossibleMove.append((origin[0] + x, origin[1] + y))
 
@@ -621,10 +699,15 @@ class Plateau:
 
 							else:
 
-								if self.getCase(origin[0] + x, origin[1] + my).getCouleur() != pionSelected.getCouleur():
+								if not takeFriends:
+
+									if self.getCase(origin[0] + x, origin[1] + my).getCouleur() != pionSelected.getCouleur():
+
+										listPossibleMove.append((origin[0] + x, origin[1] + my))
+
+								else:
 
 									listPossibleMove.append((origin[0] + x, origin[1] + my))
-
 
 		# ==============================================================================================================
 		# FOU
@@ -641,75 +724,110 @@ class Plateau:
 
 				if 0 < origin[0] + x < 9 and 0 < origin[1] + x < 9 and downRight:
 
-					if "empty" in self.getCase(origin[0] + x, origin[1] + x).getName():
+					if "empty" in self.getCase(origin[0] + x, origin[1] + x).getName() and not withTrace:
+
+						listPossibleMove.append((origin[0] + x, origin[1] + x))
+
+					elif "empty" in self.getCase(origin[0] + x, origin[1] + x).getName() and withTrace:
 
 						listPossibleMove.append((origin[0] + x, origin[1] + x))
 
 					else:
 
-						if self.getCase(origin[0] + x, origin[1] + x).getCouleur() != pionSelected.getCouleur():
+						if not takeFriends:
 
-							listPossibleMove.append((origin[0] + x, origin[1] + x))
-							downRight = False
+							if self.getCase(origin[0] + x, origin[1] + x).getCouleur() != pionSelected.getCouleur():
+
+								listPossibleMove.append((origin[0] + x, origin[1] + x))
+								downRight = False
+
+							else:
+
+								downRight = False
 
 						else:
 
-							downRight = False
+							listPossibleMove.append((origin[0] + x, origin[1] + x))
 
 				if 0 < origin[0] - x < 9 and 0 < origin[1] - x < 9 and upLeft:
 
-					if "empty" in self.getCase(origin[0] - x, origin[1] - x).getName():
+					if "empty" in self.getCase(origin[0] - x, origin[1] - x).getName() and not withTrace:
 
 						listPossibleMove.append((origin[0] - x, origin[1] - x))
 
+					elif "empty" in self.getCase(origin[0] - x, origin[1] - x).getName() and withTrace:
+
+						listPossibleMove.append((origin[0] - x, origin[1] - x))
 					else:
 
-						if self.getCase(origin[0] - x, origin[1] - x).getCouleur() != pionSelected.getCouleur():
+						if not takeFriends:
 
-							listPossibleMove.append((origin[0] - x, origin[1] - x))
-							upLeft = False
+							if self.getCase(origin[0] - x, origin[1] - x).getCouleur() != pionSelected.getCouleur():
+
+								listPossibleMove.append((origin[0] - x, origin[1] - x))
+								upLeft = False
+
+							else:
+
+								upLeft = False
 
 						else:
 
-							upLeft = False
-
+							listPossibleMove.append((origin[0] - x, origin[1] - x))
 
 				if 0 < origin[0] + x < 9 and 0 < origin[1] - x < 9 and upRight:
 
-					if "empty" in self.getCase(origin[0] + x, origin[1] - x).getName():
+					if "empty" in self.getCase(origin[0] + x, origin[1] - x).getName() and not withTrace:
+
+						listPossibleMove.append((origin[0] + x, origin[1] - x))
+
+					elif "empty" in self.getCase(origin[0] + x, origin[1] - x).getName() and withTrace:
 
 						listPossibleMove.append((origin[0] + x, origin[1] - x))
 
 					else:
 
-						if self.getCase(origin[0] + x, origin[1] - x).getCouleur() != pionSelected.getCouleur() and upRight:
+						if not takeFriends:
 
-							listPossibleMove.append((origin[0] + x, origin[1] - x))
-							upRight = False
+							if self.getCase(origin[0] + x, origin[1] - x).getCouleur() != pionSelected.getCouleur() and upRight:
+
+								listPossibleMove.append((origin[0] + x, origin[1] - x))
+								upRight = False
+
+							else:
+
+								upRight = False
 
 						else:
 
-							upRight = False
-
+							listPossibleMove.append((origin[0] + x, origin[1] - x))
 
 				if 0 < origin[0] - x < 9 and 0 < origin[1] + x < 9 and downLeft:
 
-					if "empty" in self.getCase(origin[0] - x, origin[1] + x).getName():
+					if "empty" in self.getCase(origin[0] - x, origin[1] + x).getName() and not withTrace:
+
+						listPossibleMove.append((origin[0] - x, origin[1] + x))
+
+					elif "empty" in self.getCase(origin[0] - x, origin[1] + x).getName() and withTrace:
 
 						listPossibleMove.append((origin[0] - x, origin[1] + x))
 
 					else:
 
-						if self.getCase(origin[0] - x, origin[1] + x).getCouleur() != pionSelected.getCouleur():
+						if not takeFriends:
 
-							listPossibleMove.append((origin[0] - x, origin[1] + x))
-							downLeft = False
+							if self.getCase(origin[0] - x, origin[1] + x).getCouleur() != pionSelected.getCouleur():
 
+								listPossibleMove.append((origin[0] - x, origin[1] + x))
+								downLeft = False
+
+							else:
+
+								downLeft = False
 
 						else:
 
-							downLeft = False
-
+							listPossibleMove.append((origin[0] - x, origin[1] + x))
 
 		# ==============================================================================================================
 		# REINE
@@ -734,155 +852,233 @@ class Plateau:
 
 				if 0 < origin[0] + x < 9 and 0 < origin[1] + x < 9 and downRight:
 
-					if "empty" in self.getCase(origin[0] + x, origin[1] + x).getName():
+					if "empty" in self.getCase(origin[0] + x, origin[1] + x).getName() and not withTrace:
+
+						listPossibleMove.append((origin[0] + x, origin[1] + x))
+
+					elif self.getCase(origin[0] + x, origin[1] + x).getCouleur() != pionSelected.getCouleur() and withTrace:
 
 						listPossibleMove.append((origin[0] + x, origin[1] + x))
 
 					else:
 
-						if self.getCase(origin[0] + x, origin[1] + x).getCouleur() != pionSelected.getCouleur():
+						if not takeFriends:
 
-							listPossibleMove.append((origin[0] + x, origin[1] + x))
-							downRight = False
+							if self.getCase(origin[0] + x, origin[1] + x).getCouleur() != pionSelected.getCouleur():
+
+								listPossibleMove.append((origin[0] + x, origin[1] + x))
+								downRight = False
+
+							else:
+
+								downRight = False
 
 						else:
 
-							downRight = False
+							listPossibleMove.append((origin[0] + x, origin[1] + x))
 
 				# Up Left ----------------------------------------------------------------------------------------------
 
 				if 0 < origin[0] - x < 9 and 0 < origin[1] - x < 9 and upLeft:
 
-					if "empty" in self.getCase(origin[0] - x, origin[1] - x).getName():
+					if "empty" in self.getCase(origin[0] - x, origin[1] - x).getName() and not withTrace:
+
+						listPossibleMove.append((origin[0] - x, origin[1] - x))
+
+					elif self.getCase(origin[0] - x, origin[1] - x).getCouleur() != pionSelected.getCouleur() and withTrace:
 
 						listPossibleMove.append((origin[0] - x, origin[1] - x))
 
 					else:
 
-						if self.getCase(origin[0] - x, origin[1] - x).getCouleur() != pionSelected.getCouleur():
+						if not takeFriends:
 
-							listPossibleMove.append((origin[0] - x, origin[1] - x))
-							upLeft = False
+							if self.getCase(origin[0] - x, origin[1] - x).getCouleur() != pionSelected.getCouleur():
+
+								listPossibleMove.append((origin[0] - x, origin[1] - x))
+								upLeft = False
+
+							else:
+
+								upLeft = False
 
 						else:
 
-							upLeft = False
+							listPossibleMove.append((origin[0] - x, origin[1] - x))
 
 				# Up Right ---------------------------------------------------------------------------------------------
 
 				if 0 < origin[0] + x < 9 and 0 < origin[1] - x < 9 and upRight:
 
-					if "empty" in self.getCase(origin[0] + x, origin[1] - x).getName():
+					if "empty" in self.getCase(origin[0] + x, origin[1] - x).getName() and not withTrace:
+
+						listPossibleMove.append((origin[0] + x, origin[1] - x))
+
+					elif self.getCase(origin[0] + x, origin[1] - x).getCouleur() != pionSelected.getCouleur() and withTrace:
 
 						listPossibleMove.append((origin[0] + x, origin[1] - x))
 
 					else:
 
-						if self.getCase(origin[0] + x, origin[1] - x).getCouleur() != pionSelected.getCouleur():
+						if not takeFriends:
 
-							listPossibleMove.append((origin[0] + x, origin[1] - x))
-							upRight = False
+							if self.getCase(origin[0] + x, origin[1] - x).getCouleur() != pionSelected.getCouleur():
+
+								listPossibleMove.append((origin[0] + x, origin[1] - x))
+								upRight = False
+
+							else:
+
+								upRight = False
 
 						else:
 
-							upRight = False
+							listPossibleMove.append((origin[0] + x, origin[1] - x))
 
 				# Down Left --------------------------------------------------------------------------------------------
 
 				if 0 < origin[0] - x < 9 and 0 < origin[1] + x < 9 and downLeft:
 
-					if "empty" in self.getCase(origin[0] - x, origin[1] + x).getName():
+					if "empty" in self.getCase(origin[0] - x, origin[1] + x).getName() and not withTrace:
+
+						listPossibleMove.append((origin[0] - x, origin[1] + x))
+
+					elif self.getCase(origin[0] - x, origin[1] + x).getCouleur() != pionSelected.getCouleur() and withTrace:
 
 						listPossibleMove.append((origin[0] - x, origin[1] + x))
 
 					else:
 
-						if self.getCase(origin[0] - x, origin[1] + x).getCouleur() != pionSelected.getCouleur():
+						if not takeFriends:
 
-							listPossibleMove.append((origin[0] - x, origin[1] + x))
-							downLeft = False
+							if self.getCase(origin[0] - x, origin[1] + x).getCouleur() != pionSelected.getCouleur():
 
+								listPossibleMove.append((origin[0] - x, origin[1] + x))
+								downLeft = False
+
+							else:
+
+								downLeft = False
 
 						else:
 
-							downLeft = False
+							listPossibleMove.append((origin[0] - x, origin[1] + x))
 
 				# Up ---------------------------------------------------------------------------------------------------
 
 				if 0 < origin[1] + x < 9 and up:
 
-					if "empty" in self.getCase(origin[0], origin[1] + x).getName():
+					if "empty" in self.getCase(origin[0], origin[1] + x).getName() and not withTrace:
+
+						listPossibleMove.append((origin[0], origin[1] + x))
+
+					elif self.getCase(origin[0], origin[1] + x).getCouleur() != pionSelected.getCouleur() and withTrace:
 
 						listPossibleMove.append((origin[0], origin[1] + x))
 
 					else:
 
-						if self.getCase(origin[0], origin[1] + x).getCouleur() != pionSelected.getCouleur():
+						if not takeFriends:
 
-							listPossibleMove.append((origin[0], origin[1] + x))
-							up = False
+							if self.getCase(origin[0], origin[1] + x).getCouleur() != pionSelected.getCouleur():
+
+								listPossibleMove.append((origin[0], origin[1] + x))
+								up = False
+
+							else:
+
+								up = False
 
 						else:
 
-							up = False
+							listPossibleMove.append((origin[0], origin[1] + x))
 
 				# Down -------------------------------------------------------------------------------------------------
 
 				if 0 < origin[1] - x < 9 and down:
 
-					if "empty" in self.getCase(origin[0], origin[1] - x).getName():
+					if "empty" in self.getCase(origin[0], origin[1] - x).getName() and not withTrace:
+
+						listPossibleMove.append((origin[0], origin[1] - x))
+
+					elif self.getCase(origin[0], origin[1] - x).getCouleur() != pionSelected.getCouleur() and withTrace:
 
 						listPossibleMove.append((origin[0], origin[1] - x))
 
 					else:
 
-						if self.getCase(origin[0], origin[1] - x).getCouleur() != pionSelected.getCouleur():
+						if not takeFriends:
 
-							listPossibleMove.append((origin[0], origin[1] - x))
-							down = False
+							if self.getCase(origin[0], origin[1] - x).getCouleur() != pionSelected.getCouleur():
+
+								listPossibleMove.append((origin[0], origin[1] - x))
+								down = False
+
+							else:
+
+								down = False
 
 						else:
 
-							down = False
+							listPossibleMove.append((origin[0], origin[1] - x))
 
 				# Left -------------------------------------------------------------------------------------------------
 
 				if 0 < origin[0] - x < 9 and left:
 
-					if "empty" in self.getCase(origin[0] - x, origin[1]).getName():
+					if "empty" in self.getCase(origin[0] - x, origin[1]).getName() and not withTrace:
+
+						listPossibleMove.append((origin[0] - x, origin[1]))
+
+					elif self.getCase(origin[0] - x, origin[1]).getCouleur() != pionSelected.getCouleur() and withTrace:
 
 						listPossibleMove.append((origin[0] - x, origin[1]))
 
 					else:
 
-						if self.getCase(origin[0] - x, origin[1]).getCouleur() != pionSelected.getCouleur():
+						if not takeFriends:
 
-							listPossibleMove.append((origin[0] - x, origin[1]))
-							left = False
+							if self.getCase(origin[0] - x, origin[1]).getCouleur() != pionSelected.getCouleur():
+
+								listPossibleMove.append((origin[0] - x, origin[1]))
+								left = False
+
+							else:
+
+								left = False
 
 						else:
 
-							left = False
+							listPossibleMove.append((origin[0] - x, origin[1]))
 
 				# Right ------------------------------------------------------------------------------------------------
 
 				if 0 < origin[0] + x < 9 and right:
 
-					if "empty" in self.getCase(origin[0] + x, origin[1]).getName():
+					if "empty" in self.getCase(origin[0] + x, origin[1]).getName() and not withTrace:
+
+						listPossibleMove.append((origin[0] + x, origin[1]))
+
+					elif self.getCase(origin[0] + x, origin[1]).getCouleur() != pionSelected.getCouleur() and withTrace:
 
 						listPossibleMove.append((origin[0] + x, origin[1]))
 
 					else:
 
-						if self.getCase(origin[0] + x, origin[1]).getCouleur() != pionSelected.getCouleur():
+						if not takeFriends:
 
-							listPossibleMove.append((origin[0] + x, origin[1]))
-							right = False
+							if self.getCase(origin[0] + x, origin[1]).getCouleur() != pionSelected.getCouleur():
+
+								listPossibleMove.append((origin[0] + x, origin[1]))
+								right = False
+
+							else:
+
+								right = False
 
 						else:
 
-							right = False
-
+							listPossibleMove.append((origin[0] + x, origin[1]))
 
 		# ==============================================================================================================
 		# ROI
@@ -913,14 +1109,20 @@ class Plateau:
 
 				else:
 
-					if self.getCase(origin[0] + x, origin[1] + x).getCouleur() != pionSelected.getCouleur():
+					if not takeFriends:
 
-						listPossibleMove.append((origin[0] + x, origin[1] + x))
-						downRight = False
+						if self.getCase(origin[0] + x, origin[1] + x).getCouleur() != pionSelected.getCouleur():
+
+							listPossibleMove.append((origin[0] + x, origin[1] + x))
+							downRight = False
+
+						else:
+
+							downRight = False
 
 					else:
 
-						downRight = False
+						listPossibleMove.append((origin[0] + x, origin[1] + x))
 
 			# Up Left ----------------------------------------------------------------------------------------------
 
@@ -932,14 +1134,20 @@ class Plateau:
 
 				else:
 
-					if self.getCase(origin[0] - x, origin[1] - x).getCouleur() != pionSelected.getCouleur():
+					if not takeFriends:
 
-						listPossibleMove.append((origin[0] - x, origin[1] - x))
-						upLeft = False
+						if self.getCase(origin[0] - x, origin[1] - x).getCouleur() != pionSelected.getCouleur():
+
+							listPossibleMove.append((origin[0] - x, origin[1] - x))
+							upLeft = False
+
+						else:
+
+							upLeft = False
 
 					else:
 
-						upLeft = False
+						listPossibleMove.append((origin[0] - x, origin[1] - x))
 
 			# Up Right ---------------------------------------------------------------------------------------------
 
@@ -951,14 +1159,20 @@ class Plateau:
 
 				else:
 
-					if self.getCase(origin[0] + x, origin[1] - x).getCouleur() != pionSelected.getCouleur():
+					if not takeFriends:
 
-						listPossibleMove.append((origin[0] + x, origin[1] - x))
-						upRight = False
+						if self.getCase(origin[0] + x, origin[1] - x).getCouleur() != pionSelected.getCouleur():
+
+							listPossibleMove.append((origin[0] + x, origin[1] - x))
+							upRight = False
+
+						else:
+
+							upRight = False
 
 					else:
 
-						upRight = False
+						listPossibleMove.append((origin[0] + x, origin[1] - x))
 
 			# Down Left --------------------------------------------------------------------------------------------
 
@@ -970,15 +1184,20 @@ class Plateau:
 
 				else:
 
-					if self.getCase(origin[0] - x, origin[1] + x).getCouleur() != pionSelected.getCouleur():
+					if not takeFriends:
 
-						listPossibleMove.append((origin[0] - x, origin[1] + x))
-						downLeft = False
+						if self.getCase(origin[0] - x, origin[1] + x).getCouleur() != pionSelected.getCouleur():
 
+							listPossibleMove.append((origin[0] - x, origin[1] + x))
+							downLeft = False
+
+						else:
+
+							downLeft = False
 
 					else:
 
-						downLeft = False
+						listPossibleMove.append((origin[0] - x, origin[1] + x))
 
 			# Up ---------------------------------------------------------------------------------------------------
 
@@ -990,14 +1209,20 @@ class Plateau:
 
 				else:
 
-					if self.getCase(origin[0], origin[1] + x).getCouleur() != pionSelected.getCouleur():
+					if not takeFriends:
 
-						listPossibleMove.append((origin[0], origin[1] + x))
-						up = False
+						if self.getCase(origin[0], origin[1] + x).getCouleur() != pionSelected.getCouleur():
+
+							listPossibleMove.append((origin[0], origin[1] + x))
+							up = False
+
+						else:
+
+							up = False
 
 					else:
 
-						up = False
+						listPossibleMove.append((origin[0], origin[1] + x))
 
 			# Down -------------------------------------------------------------------------------------------------
 
@@ -1009,14 +1234,20 @@ class Plateau:
 
 				else:
 
-					if self.getCase(origin[0], origin[1] - x).getCouleur() != pionSelected.getCouleur():
+					if not takeFriends:
 
-						listPossibleMove.append((origin[0], origin[1] - x))
-						down = False
+						if self.getCase(origin[0], origin[1] - x).getCouleur() != pionSelected.getCouleur():
+
+							listPossibleMove.append((origin[0], origin[1] - x))
+							down = False
+
+						else:
+
+							down = False
 
 					else:
 
-						down = False
+						listPossibleMove.append((origin[0], origin[1] - x))
 
 			# Left -------------------------------------------------------------------------------------------------
 
@@ -1028,14 +1259,20 @@ class Plateau:
 
 				else:
 
-					if self.getCase(origin[0] - x, origin[1]).getCouleur() != pionSelected.getCouleur():
+					if not takeFriends:
 
-						listPossibleMove.append((origin[0] - x, origin[1]))
-						left = False
+						if self.getCase(origin[0] - x, origin[1]).getCouleur() != pionSelected.getCouleur():
+
+							listPossibleMove.append((origin[0] - x, origin[1]))
+							left = False
+
+						else:
+
+							left = False
 
 					else:
 
-						left = False
+						listPossibleMove.append((origin[0] - x, origin[1]))
 
 			# Right ------------------------------------------------------------------------------------------------
 
@@ -1047,14 +1284,20 @@ class Plateau:
 
 				else:
 
-					if self.getCase(origin[0] + x, origin[1]).getCouleur() != pionSelected.getCouleur():
+					if not takeFriends:
 
-						listPossibleMove.append((origin[0] + x, origin[1]))
-						right = False
+						if self.getCase(origin[0] + x, origin[1]).getCouleur() != pionSelected.getCouleur():
+
+							listPossibleMove.append((origin[0] + x, origin[1]))
+							right = False
+
+						else:
+
+							right = False
 
 					else:
 
-						right = False
+						listPossibleMove.append((origin[0] + x, origin[1]))
 
 		# ==============================================================================================================
 		# TOUR
@@ -1073,81 +1316,116 @@ class Plateau:
 
 				if 0 < origin[1] + x < 9 and up:
 
-					if "empty" in self.getCase(origin[0], origin[1] + x).getName():
+					if "empty" in self.getCase(origin[0], origin[1] + x).getName() and not withTrace:
+
+						listPossibleMove.append((origin[0], origin[1] + x))
+
+					elif "empty" in self.getCase(origin[0], origin[1] + x).getName() and withTrace:
 
 						listPossibleMove.append((origin[0], origin[1] + x))
 
 					else:
 
-						if self.getCase(origin[0], origin[1] + x).getCouleur() != pionSelected.getCouleur():
+						if not takeFriends:
 
-							listPossibleMove.append((origin[0], origin[1] + x))
-							up = False
+							if self.getCase(origin[0], origin[1] + x).getCouleur() != pionSelected.getCouleur():
+
+								listPossibleMove.append((origin[0], origin[1] + x))
+								up = False
+
+							else:
+
+								up = False
 
 						else:
 
-							up = False
+							listPossibleMove.append((origin[0], origin[1] + x))
 
 				# Down -------------------------------------------------------------------------------------------------
 
 				if 0 < origin[1] - x < 9 and down:
 
-					if "empty" in self.getCase(origin[0], origin[1] - x).getName():
+					if "empty" in self.getCase(origin[0], origin[1] - x).getName() and not withTrace:
+
+						listPossibleMove.append((origin[0], origin[1] - x))
+
+					elif "empty" in self.getCase(origin[0], origin[1] - x).getName() and withTrace:
 
 						listPossibleMove.append((origin[0], origin[1] - x))
 
 					else:
 
-						if self.getCase(origin[0], origin[1] - x).getCouleur() != pionSelected.getCouleur():
+						if not takeFriends:
 
-							listPossibleMove.append((origin[0], origin[1] - x))
-							down = False
+							if self.getCase(origin[0], origin[1] - x).getCouleur() != pionSelected.getCouleur():
+
+								listPossibleMove.append((origin[0], origin[1] - x))
+								down = False
+
+							else:
+
+								down = False
 
 						else:
 
-							down = False
+							listPossibleMove.append((origin[0], origin[1] - x))
 
 				# Left -------------------------------------------------------------------------------------------------
 
 				if 0 < origin[0] - x < 9 and left:
 
-					if "empty" in self.getCase(origin[0] - x, origin[1]).getName():
+					if "empty" in self.getCase(origin[0] - x, origin[1]).getName() and not withTrace:
+
+						listPossibleMove.append((origin[0] - x, origin[1]))
+
+					if "empty" in self.getCase(origin[0] - x, origin[1]).getName() and withTrace:
 
 						listPossibleMove.append((origin[0] - x, origin[1]))
 
 					else:
 
-						if self.getCase(origin[0] - x, origin[1]).getCouleur() != pionSelected.getCouleur():
+						if not takeFriends:
 
-							listPossibleMove.append((origin[0] - x, origin[1]))
-							left = False
+							if self.getCase(origin[0] - x, origin[1]).getCouleur() != pionSelected.getCouleur():
+
+								listPossibleMove.append((origin[0] - x, origin[1]))
+								left = False
+
+							else:
+
+								left = False
 
 						else:
 
-							left = False
+							listPossibleMove.append((origin[0] - x, origin[1]))
 
 				# Right ------------------------------------------------------------------------------------------------
 
 				if 0 < origin[0] + x < 9 and right:
 
-					if "empty" in self.getCase(origin[0] + x, origin[1]).getName():
+					if "empty" in self.getCase(origin[0] + x, origin[1]).getName() and not withTrace:
+
+						listPossibleMove.append((origin[0] + x, origin[1]))
+
+					elif "empty" in self.getCase(origin[0] + x, origin[1]).getName() and withTrace:
 
 						listPossibleMove.append((origin[0] + x, origin[1]))
 
 					else:
 
-						if self.getCase(origin[0] + x, origin[1]).getCouleur() != pionSelected.getCouleur():
+						if not takeFriends:
 
-							listPossibleMove.append((origin[0] + x, origin[1]))
-							right = False
+							if self.getCase(origin[0] + x, origin[1]).getCouleur() != pionSelected.getCouleur():
+
+								listPossibleMove.append((origin[0] + x, origin[1]))
+								right = False
+
+							else:
+
+								right = False
 
 						else:
 
-							right = False
-		#
-		# for move in listPossibleMove:
-		#
-		# 	print(move)
-
+							listPossibleMove.append((origin[0] + x, origin[1]))
 
 		return listPossibleMove
