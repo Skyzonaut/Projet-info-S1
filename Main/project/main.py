@@ -8,15 +8,19 @@ from datetime import *
 from threading import *
 
 # TODO: Dossier présentation du code
-# Test
+# TODO: IA
+# TODO: Voir pour cacher les mouvements normaux d'un pion quand il doit sauver son roi
+# TODO: Implementer simulation
+# TODO: Implémenter starts différents
+# TODO: Implémenter coups spéciaux
+
+running = True
 
 class initPlateau(Frame):
 
         def __init__(self, parent):
 
             Frame.__init__(self, parent)
-
-            print("intitialization")
 
             self.parent = parent
 
@@ -52,15 +56,16 @@ class initPlateau(Frame):
             self.black = False
 
             # Echec ou non, permet de bloquer le jeu si il y a un echec
-            self.echec = False
+            self.whiteEnEchec = False
+            self.blackEnEchec = False
             self.pionWhitePlayEchec = []
             self.pionBlackPlayEchec = []
 
             # Valeur contenant le tour actuel
-            self.tourWhite = True
+            self.tourColorDisplay = True
             self.textTourStringVar = StringVar()
             self.textTourStringVar.set("AU TOUR DES BLANCS")
-            print(self.textTourStringVar.get())
+
             # Valeur contenant le panneau d'affichage d'état du jeu
             self.textAffichage = StringVar()
             self.textAffichage.set("")
@@ -69,14 +74,12 @@ class initPlateau(Frame):
             self.textNbTour = StringVar()
             self.textNbTour.set(str(self.tour))
 
-            # # Protocol Handler
-            # parent.protocol("WM_DELETE_WINDOW", on_closing)
+            # Protocol Handler
+            parent.protocol("WM_DELETE_WINDOW", self.on_closing)
 
             self.initiateUI()
 
         def initiateUI(self):
-
-            print("InitiateUI")
 
             # Fenetre sur laquelle on placera tous les composants
             self.parent.geometry(str(self.fenX) + "x" + str(self.fenY))
@@ -95,17 +98,31 @@ class initPlateau(Frame):
             self.nbTour['bg'] = "#3BCB38"
             self.nbTour.place(x=self.console.winfo_x()+11, y=8)
 
-            self.tourLabel = Label(self.console, width=45, height=12)
+            self.tourLabel = Label(self.console, width=45, height=9)
             self.tourLabel['textvariable'] = self.textTourStringVar
             self.tourLabel['fg'] = "black"
             self.tourLabel['bg'] = "white"
             self.tourLabel.place(x=self.console.winfo_x()+11, y=55)
 
-            self.affichage = Label(self.console, width=45, height=12)
+            self.historiquePanneau = Text(self.console, width=34, height=22)
+            # self.historiquePanneau['textvariable'] = self.textTourStringVar
+            self.historiquePanneau['fg'] = "black"
+            self.historiquePanneau['bg'] = "#babfbb"
+            self.historiquePanneau['cursor'] = "arrow"
+            self.historiquePanneau['padx'] = "5px"
+            self.historiquePanneau['pady'] = "5px"
+            self.historiquePanneau['relief'] = "solid"
+            self.historiquePanneau['borderwidth'] = "1px"
+            self.historiquePanneau['state'] = "disabled"
+            self.historiquePanneau['wrap'] = "word"
+            self.historiquePanneau['font'] = ("Courier", 11, "bold")
+            self.historiquePanneau.place(x=self.console.winfo_x()+11, y=205)
+
+            self.affichage = Label(self.console, width=45, height=7)
             self.affichage['textvariable'] = self.textAffichage
             self.affichage['fg'] = "black"
             self.affichage['bg'] = "#789FDE"
-            self.affichage.place(x=self.console.winfo_x()+12, y=520)
+            self.affichage.place(x=self.console.winfo_x()+12, y=600)
 
             self.restartButton = Button(self.console, text="RESTART GAME", width=45, height=4, command=self.restart)
             self.restartButton['borderwidth'] = 3
@@ -126,7 +143,6 @@ class initPlateau(Frame):
 
         def create_grid(self):
 
-            print("Create Grid")
             # On parcours de gauche à droite, puis de haut en bas
             # Du bas vers le haut
             self.y = 1
@@ -146,7 +162,6 @@ class initPlateau(Frame):
                     # On ajoute ce bouton au dictionnaire de boutons
                     self.dict_bouton[(self.x, self.y)] = self.bouton
                     self.coul_bouton[(self.x, self.y)] = "#638f6e" if self.black else "white"
-
                     self.bouton.config(
                         width=self.echiquier.winfo_reqwidth()//8,  #119px
                             height=self.echiquier.winfo_reqheight()//8,  #113px
@@ -176,14 +191,15 @@ class initPlateau(Frame):
             # Print piece on the console if enable
             # self.cons_text.insert(1.0, str(self.plat.getCase(tuple[0], tuple[1]).getApercu()))
 
-            # if not self.echec or self.echec:
-
             if self.event_log[-1].getAction() != "click":
 
-                if self.tourCouleurVerificateur(self.plat.getCase(tuple[0], tuple[1]).getCouleur(), self.tourWhite):
+                if self.tourCouleurVerificateur(self.plat.getCase(tuple[0], tuple[1]).getCouleur(), self.tourColorDisplay):
 
                     # On crée un nouvel évènement de click simple
                     self.newEvent = event(str(self.newId), tuple, "click")
+
+                    # On récupère la couleur du pion à jouer
+                    self.couleurPion = self.plat.getCase(tuple[0], tuple[1]).getCouleur()
 
                     # Comme c'est un click et non un place, ça signifie que ce bouton est
                     # l'origine du mouvement, donc contient le pion à bouger
@@ -196,18 +212,64 @@ class initPlateau(Frame):
 
                     self.possibleMoves = self.plat.getPath(tuple)
 
+                    couleurEnnemie = "blanc" if self.couleurPion == "noir" else "noir"
+
+                    pieceEnnemies = self.plat.getMatriceByCouleur(couleurEnnemie)
+
+                    pieceAllie = self.plat.getMatriceByCouleur(self.couleurPion)
+
+                    # Empeche le roi de se déplacer dans une case qui le mettrait en situation d'échec
+                    if self.plat.getCaseTuple(tuple).getType() == "roi":
+
+                        zoneEnEchec = []
+
+                        for piece in pieceEnnemies:
+
+                            # zoneEnEchec += self.plat.getPath(piece, pion=True)
+                            zoneEnEchec += self.plat.getPath(piece, pion=True)
+
+                        for move in zoneEnEchec:
+
+                            if move in self.possibleMoves:
+
+                                self.possibleMoves.remove(move)
+
+                    else:
+
+                        # Empeche une piece de bouger si cela met son roi en echec
+                        pieceAttaque = []
+                        roi = self.plat.getRoi(self.couleurPion)
+
+                        for piece in pieceEnnemies:
+
+                            allieSurLeChemin = []
+
+                            for allie in pieceAllie:
+
+                                if allie in self.plat.getCasePathFinding(roi, piece, True):
+
+                                    allieSurLeChemin.append(allie)
+
+                            if len(allieSurLeChemin) <=  2:
+
+                                if roi in self.plat.getCasePathFinding(roi, piece, True):
+
+                                    if tuple in self.plat.getPath(piece):
+
+                                        if tuple in self.plat.getCasePathFinding(roi, piece, True):
+
+                                            self.possibleMoves.clear()
+                                            break
+
                     for case in self.possibleMoves:
 
                         self.dict_bouton[case].config(bg="#CD4C4C")
 
                     self.newEvent.setTrace(self.possibleMoves)
 
-                    # On récupère la couleur du pion à jouer
-                    self.couleurPion = self.plat.getCase(tuple[0], tuple[1]).getCouleur()
-
                 else:
                     
-                    print("C'est aux", "blanc" if self.tourWhite else "noirs", "de jouer")
+                    print("C'est aux", "blanc" if self.tourColorDisplay else "noirs", "de jouer")
 
             else:
 
@@ -237,26 +299,30 @@ class initPlateau(Frame):
 
                 if self.image:
 
-                    if tuple in self.plat.getPath(self.former_case):
+                    # possibleMove = self.plat.getPath(self.former_case)
+                    possibleMove = self.event_log[-1].getTrace()
+
+                    if tuple in possibleMove:
 
                         # Retire l'image du bouton de l'ancienne case
                         self.dict_bouton[self.former_case].config(image="")
 
-                        # On met l'ancien pion dans la nouvelle case
-                        # plat.setCase(tuple[0],tuple[1], plat.getCase(former_case[0], former_case[1]))
+                        if "empty" in self.plat.getCaseTuple(tuple).getName():
+                            self.printPanneau(self.former_case, tuple, "move")
+                        else:
+                            self.printPanneau(self.former_case, tuple, "take")
 
                         self.plat.move(self.former_case, tuple)
 
-                        # On vide l'ancienne case
-                        # plat.empty(former_case[0], former_case[1])
+
 
                         # Place l'image de l'ancienne case sur la nouvelle
                         self.bouton.config(image=self.image)
 
-                        self.tourWhite = not self.tourWhite
-                        self.textTourStringVar.set("AU TOUR DES BLANCS" if self.tourWhite else "AU TOUR DES NOIRS")
-                        self.tourLabel['fg'] = "black" if self.tourWhite else "white"
-                        self.tourLabel['bg'] = "white" if self.tourWhite else "black"
+                        self.tourColorDisplay = not self.tourColorDisplay
+                        self.textTourStringVar.set("AU TOUR DES BLANCS" if self.tourColorDisplay else "AU TOUR DES NOIRS")
+                        self.tourLabel['fg'] = "black" if self.tourColorDisplay else "white"
+                        self.tourLabel['bg'] = "white" if self.tourColorDisplay else "black"
 
                         self.tour += 1
                         self.textNbTour.set(str(self.tour))
@@ -264,11 +330,6 @@ class initPlateau(Frame):
                     else:
 
                         print("Impossible move")
-
-
-            # TODO : Bloquer le jeu lorsqu'il y a un echec
-            # TODO : Bloquer le jeu lorsqu'il y a un echec && MATH
-
 
             self.listPionBlackPlayEchec = self.plat.checkEchec("blanc")
             self.listPionWhitePlayEchec = self.plat.checkEchec("noir")
@@ -288,7 +349,8 @@ class initPlateau(Frame):
                 self.textAffichage.set("ECHEC")
                 self.affichage['fg'] = "white"
                 self.affichage['bg'] = "#A02B2B"
-                self.echec = True
+                self.whiteEnEchec = True
+
 
             else:
 
@@ -324,7 +386,7 @@ class initPlateau(Frame):
                 self.textAffichage.set("ECHEC")
                 self.affichage['fg'] = "white"
                 self.affichage['bg'] = "#A02B2B"
-                self.echec = True
+                self.blackEnEchec = True
 
             else:
 
@@ -349,7 +411,8 @@ class initPlateau(Frame):
 
             checkMateWhiteTestResult = self.plat.checkMate("blanc")
             checkMateBlackTestResult = self.plat.checkMate("noir")
-
+            print("@@@@@@@@@@@@@@@",checkMateWhiteTestResult)
+            print("@@@@@@@@@@@@@@@",checkMateBlackTestResult)
 
             # =============================================================================================
             # Check echec et mats
@@ -370,7 +433,7 @@ class initPlateau(Frame):
                 self.affichage['fg'] = "black"
                 self.affichage['bg'] = "#A02B2B"
 
-                winPopUp = Tk(className=" ECHECS")
+                self.freezeGrid()
 
             elif type(checkMateWhiteTestResult) == list:
 
@@ -396,6 +459,16 @@ class initPlateau(Frame):
                 self.newEventSauveteur["whiteSaver"] = listeSauveteurWhite
                 self.newEventSauveteur["whiteSaverTrace"] = listeSauveteurWhiteTrace
 
+                listButtonNotToDisable = listeSauveteurWhite + listeSauveteurWhiteTrace
+                roiBlanc = self.plat.getRoi("blanc")
+                listButtonNotToDisable.append(roiBlanc)
+                listButtonNotToDisable += self.plat.getPath(roiBlanc)
+
+                self.newEvent.setEnabledButton(listButtonNotToDisable)
+
+                self.disableButtonInCaseOfEchec(self.dict_bouton, listButtonNotToDisable)
+
+
             elif checkMateWhiteTestResult == "no-echec":
 
                 self.whiteSaverToEmpty = self.event_log[-1].getSauveteur()
@@ -417,14 +490,17 @@ class initPlateau(Frame):
                         # Et on lui remet sa couleur de base.
                         self.dict_bouton[saverMove].config(bg=self.pionEchecOriginalColor)
 
-            # Black Test Echec ----------------------------------------------------------------------------
+                self.enableAllButtons()
 
+            # Black Test Echec ----------------------------------------------------------------------------
 
             if checkMateBlackTestResult == "mat":
 
                 self.textAffichage.set("ECHEC ET MAT\nLes Blancs l'emportent")
                 self.affichage['fg'] = "black"
                 self.affichage['bg'] = "#A02B2B"
+
+                self.freezeGrid()
 
             elif type(checkMateBlackTestResult) == list:
 
@@ -449,6 +525,15 @@ class initPlateau(Frame):
                 self.newEventSauveteur["blackSaver"] = listeSauveteurBlack
                 self.newEventSauveteur["blackSaverTrace"] = listeSauveteurBlackTrace
 
+                listButtonNotToDisable = listeSauveteurBlack + listeSauveteurBlackTrace
+                roiNoir = self.plat.getRoi("noir")
+                listButtonNotToDisable.append(roiNoir)
+                listButtonNotToDisable += self.plat.getPath(roiNoir)
+
+                self.newEvent.setEnabledButton(listButtonNotToDisable)
+
+                self.disableButtonInCaseOfEchec(self.dict_bouton, listButtonNotToDisable)
+
             elif checkMateBlackTestResult == "no-echec":
 
                 self.blackSaverToEmpty = self.event_log[-1].getSauveteur()
@@ -469,6 +554,8 @@ class initPlateau(Frame):
                         # Et on lui remet sa couleur de base.
                         self.dict_bouton[saverMove].config(bg=self.pionEchecOriginalColor)
 
+                self.enableAllButtons()
+
 
             self.newEvent.setSauveteur(self.newEventSauveteur)
             self.newEvent.setEchecTrace(self.echecTrace)
@@ -477,13 +564,38 @@ class initPlateau(Frame):
             # On rajoute l'evènement à la liste des évènements
             self.event_log.append(self.newEvent)
 
-
             # On incrémente la chaine qui sert à créer le nom/id des évènements pour le prochain
             # évènement. Toujours de x + 1
             self.id += 1
-            #
+
             # self.plat.apercu()
 
+        def printPanneau(self, origin, target, type):
+
+            self.historiquePanneau["state"] = "normal"
+
+            pionOrigin = self.plat.getCaseTuple(origin)
+            pionTarget = self.plat.getCaseTuple(target)
+
+            txt = f"Tour : {self.tour} - {pionOrigin.getCouleur().upper()}\n"
+
+            if type == "take":
+                txt += f"{pionOrigin.getType()} {pionOrigin.getCouleur()} en {origin} prends "
+                txt += f"{pionTarget.getType()} {pionTarget.getCouleur()} en {target}\n"
+
+            elif type == "move":
+                txt += f"{pionOrigin.getType()} {pionOrigin.getCouleur()} en {origin} va en {target}\n\n"
+
+            # Pour de futures évolutions
+            elif type == "echec":
+                pass
+
+            elif type == "mat":
+                pass
+
+            self.historiquePanneau.insert(END, txt)
+            self.historiquePanneau["state"] = "disabled"
+            self.historiquePanneau.see("end")
 
         def tourCouleurVerificateur(self, couleur, boolean):
 
@@ -499,40 +611,117 @@ class initPlateau(Frame):
 
                 return False
 
+        # def disableButton(self, buttonToDisableList):
+        #     for button in buttonToDisableList:
+        #          button['command'] = DISABLE
+        #
+        # def enableButton(self, buttonToDisableList):
+        #     for button in buttonToEnableList:
+        #         button['state'] = ENABlE
 
-        def game(self):
+        def disableButtonInCaseOfEchec(self, allButtonDict, buttonNotToDisableList):
+
+            for coords, button in allButtonDict.items():
+
+                if coords not in buttonNotToDisableList:
+
+                    button['state'] = DISABLED
+
+        def enableAllButtons(self):
+
+            for coords, button in self.dict_bouton.items():
+
+                button['state'] = NORMAL
+
+        def freezeGrid(self):
+
+            for coords, button in self.dict_bouton.items():
+
+                button['command'] = self.freezeButton
+
+        def freezeButton(self):
+            # pass volontaire, permet de rajouter une commande null aux boutons
+            # pour que l'on puisse les freeze
             pass
-            # gamePlaying = True
-            # oldTime = datetime.now().strftime("%H:%M:%S")
-            # while gamePlaying:
-            #     now = datetime.now().strftime("%H:%M:%S")
-            #     if oldTime != now:
-            #         print(now)
-            #         oldTime = now
 
         def restart(self):
             print("restart")
-            self.__init__(self.parent)
-            # self.plat.__init__()
-            # self.initiateUI()
-            # self.plat.apercu()
-            # self.on_closing()
+            self.on_closing()
+            self.parent.quit()
 
-        # Actions de fermeture
         def on_closing(self):
             print("\n--- Fermeture ---")
-            # for event in event_log:
-            #     event.apercu()
-            # self.plat.apercu()
-            # self.plat.apercuSet()
             self.parent.destroy()
 
-        # # Stay alive
-        # fen.mainloop()
+class initGame(Frame):
+
+    def __init__(self, parent):
+
+        Frame.__init__(self, parent)
+
+        self.parent = parent
+
+        parent.resizable(False, False)
+
+        # Valeur indépendantes
+        self.size = 600
+
+        # Protocol Handler
+        parent.protocol("WM_DELETE_WINDOW", self.on_closing)
+
+        # Fenetre sur laquelle on placera tous les composants
+        self.parent.geometry(str(self.size) + "x" + str(self.size))
+
+        self.createIntroGui()
+
+    def createIntroGui(self):
+        self.background_image = PhotoImage(file='../res/intro_background.png')
+
+        # # Echiquier, Canvas sur lequel placer les boutons, lui-meme placé sur la fenêtre fen.
+        self.mainCanvas = Canvas(self.parent, width=self.size, height=self.size)
+        self.mainCanvas.pack(side=LEFT)
+        self.mainCanvas.create_image(0, 0, image=self.background_image, anchor='nw')
+
+        # self.startPVPGameButton = Button(self.mainCanvas, text="START A PVP GAME", width=20, height=3)
+        self.startPVPGameButton = Button(self.mainCanvas, text="START A PVP GAME", width=20, height=3, command=self.startPVPGame)
+        self.startPVPGameButton['fg'] = "white"
+        self.startPVPGameButton['bg'] = "#000000"
+        self.startPVPGameButton['borderwidth'] = "2"
+        self.startPVPGameButton['relief'] = "raised"
+        self.startPVPGameButton.place(x=230, y=330)
+
+        self.startPVEGameButton = Button(self.mainCanvas, text="START A GAME VS AN IA", width=20, height=3)
+        self.startPVEGameButton['borderwidth'] = 3
+        self.startPVEGameButton['fg'] = "white"
+        self.startPVEGameButton['bg'] = "#000000"
+        self.startPVEGameButton['borderwidth'] = "2"
+        self.startPVEGameButton['relief'] = "raised"
+        self.startPVEGameButton.place(x=230, y=400)
+
+    def startPVPGame(self):
+        while running:
+            print(running)
+            newWindow = Toplevel(rootGame)
+            game = initPlateau(newWindow)
+            game.mainloop()
+
+    def on_closing(self):
+        print("\n--- Fermeture ---")
+        self.parent.destroy()
 
 if __name__ == '__main__':
 
-    root = Tk(className=" Jeu d'échecs")
+    rootGame = Tk(className=" Echec The VideoGame by Hideo Kojima")
+    intro = initGame(rootGame)
+    intro.mainloop()
+
+    # while running:
+    #
+    #     print(running)
+    #     # rootGame = Tk(className=" Jeu d'échecs")
+    #     newWindow = Toplevel(rootGame)
+    #     game = initPlateau(newWindow)
+    #     game.mainloop()
 
     # def run():
     #     gamePlaying = True
@@ -545,6 +734,5 @@ if __name__ == '__main__':
     #
     #
     # control_thread = Thread(target=run, daemon=True)
-    game = initPlateau(root)
+
     # control_thread.start()
-    root.mainloop()
