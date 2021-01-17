@@ -1,221 +1,368 @@
-from tkinter import *
-from pprint import *
-from classe.plateau import *
-from classe.event import *
-from functools import partial
-from time import *
-# import sys
-# sys.path.append("./classe")
+def move(self, tuple):
+	self.playIA("noir")
+	self.newId = self.id
 
-def initPlateau():
+	self.bouton = self.dict_bouton[(tuple[0], tuple[1])]
 
+	self.couleurPion = ""
 
-    # Micellious
-    # Valeur indépendantes
-    fenX = 1300
-    fenY = 880
+	if self.event_log[-1].getAction() != "click":
 
+		if self.tourCouleurVerificateur(self.plat.getCase(tuple[0], tuple[1]).getCouleur(), self.tourColorDisplay):
 
-    # Event history
-    initEvent = event(0, (0,0), "place")
-    event_log = [initEvent]
+			# On crée un nouvel évènement de click simple
+			self.newEvent = event(str(self.newId), tuple, "click")
 
+			# On récupère la couleur du pion à jouer
+			self.couleurPion = self.plat.getCase(tuple[0], tuple[1]).getCouleur()
 
-    # Event id generator
-    global id
-    id = 1
+			# Comme c'est un click et non un place, ça signifie que ce bouton est
+			# l'origine du mouvement, donc contient le pion à bouger
+			if self.plat.getCase(tuple[0], tuple[1]):
+				self.newEvent.setCache(self.plat.getCase(tuple[0], tuple[1]).getImage())
 
+			# Colorie la case en gris pour indiquer l'origine du mouvement
+			self.bouton.config(bg="#aaaaaa")
 
-    # Fenetre sur laquelle on placera tous les composants
-    fen = Tk(className=" Jeu d'échecs")
-    fen.geometry(str(fenX) + "x" + str(fenY))
+			self.possibleMoves = self.plat.getPath(tuple)
 
+			couleurEnnemie = "blanc" if self.couleurPion == "noir" else "noir"
 
-    # Echiquier, Canvas sur lequel placer les boutons, lui-meme placé sur la fenêtre fen.
-    echiquier = Canvas(fen, bg='white', width=950, height=int(fenY))
-    echiquier.pack(side=LEFT)
+			pieceEnnemies = self.plat.getMatriceByCouleur(couleurEnnemie)
 
+			pieceAllie = self.plat.getMatriceByCouleur(self.couleurPion)
 
-    # Console, Canvas sur lequel placer les textes et autres commandes, lui-meme placé sur la fenêtre fen.
-    console = Canvas(fen, bg='grey', width=(fenX - 950), height=int(fenY))
-    console.pack(side=LEFT)
-    # label_title = Label(console,text="Aloooooo")
-    # label_title.pack()
+			# Empeche le roi de se déplacer dans une case qui le mettrait en situation d'échec
+			if self.plat.getCaseTuple(tuple).getType() == "roi":
 
+				zoneEnEchec = []
 
-    # Text box for debugging
+				for piece in pieceEnnemies:
+					# zoneEnEchec += self.plat.getPath(piece, pion=True)
+					zoneEnEchec += self.plat.getPath(piece, pion=True)
 
-    # scrollbar = Scrollbar(console)
-    # scrollbar.pack(side=RIGHT, fill=Y)
+				for move in zoneEnEchec:
 
-    cons_text = Text(console, bg="black", fg="white", width=(fenX - 950), height=int(fenY))
-    cons_text.place(x=console.winfo_x(), y=console.winfo_y())
-    #
-    # cons_text.config(yscrollcommand=scrollbar.set)
-    # scrollbar.config(command=cons_text.yview)
+					if move in self.possibleMoves:
+						self.possibleMoves.remove(move)
 
-    # Objet plateau qui contient les positions et infos et pions.
-    # Utilisant comme repertoire un Set de pion limité
-    plat = Plateau()
-    # plat.apercu()
+			else:
 
+				# Empeche une piece de bouger si cela met son roi en echec
+				pieceAttaque = []
+				roi = self.plat.getRoi(self.couleurPion)
 
-    # Dictionnaire de type { (x,y) : button } contenant tous les boutons (ou cases) de l'échiquier,
-    # permet de faire la lisaison avec les cases du plateau.
-    # En cas d'action sur un bouton on parcours ce dictionnaire pour retrouver sa matrice,
-    # et ainsi pouvoir mettre à jour celle du plateau.
-    # En quelque sorte ce dictionnaire est la matrice graphique, là où celle du plateau est la "base de donnée"
-    dict_bouton = {}
-    coul_bouton = {}
+				for piece in pieceEnnemies:
 
+					allieSurLeChemin = []
 
-    # Valeur permettant d'alterner les couleurs
-    black = False
+					for allie in pieceAllie:
 
+						if allie in self.plat.getCasePathFinding(roi, piece, True):
+							allieSurLeChemin.append(allie)
 
-    # On parcours de gauche à droite, puis de haut en bas
-    # Du bas vers le haut
-    y = 1
-    while y <= 8:
+					if len(allieSurLeChemin) <= 2:
 
-        # De gaughe à droite
-        x = 1
-        while x <= 8:
+						if roi in self.plat.getCasePathFinding(roi, piece, True):
 
-            # On récupère la photo correspondant au pion contenant à cette emplacement du plateau
-            photo = plat.getCase(x, y).getImage()
+							if tuple in self.plat.getPath(piece):
 
+								if tuple in self.plat.getCasePathFinding(roi, piece, True):
+									self.possibleMoves.clear()
+									break
 
-            def move(tuple):
+			for case in self.possibleMoves:
+				self.dict_bouton[case].config(bg="#CD4C4C")
 
-                global id
-                newId = id
+			self.newEvent.setTrace(self.possibleMoves)
 
-                bouton = dict_bouton[(tuple[0],tuple[1])]
+		else:
 
-                cons_text.insert(1.0, str(plat.getCase(tuple[0],tuple[1]).getApercu()))
+			print("C'est aux", "blanc" if self.tourColorDisplay else "noirs", "de jouer")
 
-                if event_log[-1].getAction() == "place":
+	else:
 
-                    # On crée un nouvel évènement de click simple
-                    newEvent = event(newId, tuple, "click")
+		# On crée un nouvel évènement de placement.
+		self.newEvent = event(str(self.newId), tuple, "place")
 
-                    # Comme c'est un click et non un place, ça signifie que ce bouton est
-                    # l'origine du mouvement, donc contient le pion à bouger
-                    if plat.getCase(tuple[0],tuple[1]):
+		# L'évènement est un event de placement, donc l'évènement juste avant
+		# est un évènement d'origine (de click) donc on va chercher l'image
+		# contenu en cache dans cet évènement pour l'utiliser ici
+		self.image = self.event_log[-1].getCache()
 
-                        newEvent.setCache(plat.getCase(tuple[0],tuple[1]).getImage())
+		# On récupère les coordonnées de la case cliquée à l'évènement précédant
+		self.former_case = self.event_log[-1].getOrigin()
 
-                    # Colorie la case en gris pour indiquer l'origine du mouvement
-                    bouton.config(bg="#aaaaaa")
+		# On récupère sa couleur de base (originelle)
+		self.former_button_normal_color = self.coul_bouton[self.former_case]
+		# Et on lui remet sa couleur de base.
+		self.dict_bouton[self.former_case].config(bg=self.former_button_normal_color)
 
-                    possibleMoves = plat.getPath(tuple)
+		# On récupère la couleur du pion qui a été sélectionné
+		self.couleurPion = self.plat.getCase(self.former_case[0], self.former_case[1]).getCouleur()
 
-                    for case in possibleMoves:
-                        dict_bouton[case].config(bg="#CD4C4C")
+		for traceCase in self.event_log[-1].getTrace():
+			self.dict_bouton[traceCase].config(bg=self.coul_bouton[traceCase])
 
-                    newEvent.setTrace(possibleMoves)
+		if self.image:
 
-                else:
+			# possibleMove = self.plat.getPath(self.former_case)
+			possibleMove = self.event_log[-1].getTrace()
 
-                    # On crée un nouvel évènement de placement.
-                    newEvent = event(newId, tuple, "place")
+			if tuple in possibleMove:
 
-                    # L'évènement est un event de placement, donc l'évènement juste avant
-                    # est un évènement d'origine (de click) donc on va chercher l'image
-                    # contenu en cache dans cet évènement pour l'utiliser ici
-                    image = event_log[-1].getCache()
+				# Retire l'image du bouton de l'ancienne case
+				self.dict_bouton[self.former_case].config(image="")
 
-                    # On récupère les coordonnées de la case cliquée à l'évènement précédant
-                    former_case = event_log[-1].getOrigin()
+				if "empty" in self.plat.getCaseTuple(tuple).getName():
+					self.printPanneau(self.former_case, tuple, "move")
+				else:
+					self.printPanneau(self.former_case, tuple, "take")
 
-                    # On récupère sa couleur de base (originelle)
-                    former_button_normal_color = coul_bouton[former_case]
+				self.plat.move(self.former_case, tuple)
 
-                    # Et on lui remet sa couleur de base. Puisque
-                    dict_bouton[former_case].config(bg=former_button_normal_color)
+				# Place l'image de l'ancienne case sur la nouvelle
+				self.bouton.config(image=self.image)
 
-                    for traceCase in event_log[-1].getTrace():
-                        dict_bouton[traceCase].config(bg=coul_bouton[traceCase])
+				self.tourColorDisplay = not self.tourColorDisplay
+				self.textTourStringVar.set("AU TOUR DES BLANCS" if self.tourColorDisplay else "AU TOUR DES NOIRS")
+				self.tourLabel['fg'] = "black" if self.tourColorDisplay else "white"
+				self.tourLabel['bg'] = "white" if self.tourColorDisplay else "black"
 
-                    if image:
+				self.tour += 1
+				self.textNbTour.set(str(self.tour))
 
+			else:
 
-                        if tuple in plat.getPath(former_case):
+				print("Impossible move")
 
-                            # Retire l'image du bouton de l'ancienne case
-                            dict_bouton[former_case].config(image="")
+	self.listPionBlackPlayEchec = self.plat.checkEchec("blanc")
+	self.listPionWhitePlayEchec = self.plat.checkEchec("noir")
 
-                            # On met l'ancien pion dans la nouvelle case
-                            # plat.setCase(tuple[0],tuple[1], plat.getCase(former_case[0], former_case[1]))
+	self.echecTrace = {"whitePlayEchec": [], "blackPlayEchec": []}
 
-                            plat.move(former_case, tuple)
+	if self.listPionBlackPlayEchec:
 
-                            # On vide l'ancienne case
-                            # plat.empty(former_case[0], former_case[1])
+		self.dict_bouton[self.plat.getRoi("blanc")].config(bg="#CD4C4C")
 
-                            # Place l'image de l'ancienne case sur la nouvelle
-                            bouton.config(image=image)
+		for pionEchec in self.listPionBlackPlayEchec:
+			self.dict_bouton[pionEchec].config(bg="#e08f38")
 
-                        # plat.apercu()
+		self.echecTrace["blackPlayEchec"] = self.listPionBlackPlayEchec
 
-                        else:
+		self.textAffichage.set("ECHEC")
+		self.affichage['fg'] = "white"
+		self.affichage['bg'] = "#A02B2B"
+		self.whiteEnEchec = True
 
-                            print("Impossible move")
 
+	else:
 
-                newEvent.apercu()
+		self.original_color = self.coul_bouton[self.plat.getRoi("blanc")]
+		self.dict_bouton[self.plat.getRoi("blanc")].config(bg=self.original_color)
 
-                # On rajoute l'evènement à la liste des évènements
-                event_log.append(newEvent)
+		self.echecTraceToEmpty = self.event_log[-1].getEchecTrace()
 
-                # On incrémente la chaine qui sert à créer le nom/id des évènements pour le prochain
-                # évènement. Toujours de x + 1
-                id +=  1
+		if self.echecTraceToEmpty:
 
+			for pionEchec in self.echecTraceToEmpty["blackPlayEchec"]:
+				# On récupère sa couleur de base (originelle)
+				self.pionEchecOriginalColor = self.coul_bouton[pionEchec]
 
-            # On crée un bouton à cette position, avec la photo de sa case du plateau, on lui donne une couleur.
-            # Et une fonction onClick()
-            bouton = Button(echiquier)
+				# Et on lui remet sa couleur de base.
+				self.dict_bouton[pionEchec].config(bg=self.pionEchecOriginalColor)
 
-            # On ajoute ce bouton au dictionnaire de boutons
-            dict_bouton[(x, y)] = bouton
-            coul_bouton[(x, y)] = "#638f6e" if black else "white"
+		self.textAffichage.set("")
+		self.affichage['fg'] = "black"
+		self.affichage['bg'] = "#789FDE"
 
-            bouton.config(
-                width=echiquier.winfo_reqwidth()//8,  #119px
-                    height=echiquier.winfo_reqheight()//8,  #113px
-                        bg="#638f6e" if black else "white",
-                            activebackground="#46634d" if black else "#bbbfbc",
-                                image=photo,
-                                    command=partial(move, (x, y)))
+	if self.listPionWhitePlayEchec:
 
-            # Et pour finir on place le bouton sur le canvas pour l'afficher
-            bouton.place(x=(x-1)*echiquier.winfo_reqwidth()/8, y=(y-1)*echiquier.winfo_reqheight()/8)
+		self.dict_bouton[self.plat.getRoi("noir")].config(bg="#CD4C4C")
 
-            # On passe à la colonne suivante et change de couleur
-            x += 1 ; black = not black
+		for pionEchec in self.listPionWhitePlayEchec:
+			self.dict_bouton[pionEchec].config(bg="#e08f38")
 
-        # On passe à la Ligne suivante et change de couleur
-        y += 1 ; black = not black
+		self.echecTrace["whitePlayEchec"] = self.listPionWhitePlayEchec
 
-    # Actions de fermeture
-    def on_closing():
-        print("\n--- Fermeture ---")
-        # for event in event_log:
-        #     event.apercu()
-        # plat.apercu()
-        # plat.apercuSet()
-        fen.destroy()
+		self.textAffichage.set("ECHEC")
+		self.affichage['fg'] = "white"
+		self.affichage['bg'] = "#A02B2B"
+		self.blackEnEchec = True
 
-    # Protocol Handler
-    fen.protocol("WM_DELETE_WINDOW", on_closing)
+	else:
 
-    # Stay alive
-    fen.mainloop()
+		self.original_color = self.coul_bouton[self.plat.getRoi("noir")]
+		self.dict_bouton[self.plat.getRoi("noir")].config(bg=self.original_color)
 
-    return plat
+		self.echecTraceToEmpty = self.event_log[-1].getEchecTrace()
 
-if __name__ == '__main__':
+		if self.echecTraceToEmpty:
 
-    game = initPlateau()
+			for pionEchec in self.echecTraceToEmpty["whitePlayEchec"]:
+				# On récupère sa couleur de base (originelle)
+				self.pionEchecOriginalColor = self.coul_bouton[pionEchec]
+
+				# Et on lui remet sa couleur de base.
+				self.dict_bouton[pionEchec].config(bg=self.pionEchecOriginalColor)
+
+		self.textAffichage.set("")
+		self.affichage['fg'] = "black"
+		self.affichage['bg'] = "#789FDE"
+
+	checkMateWhiteTestResult = self.plat.checkMate("blanc")
+	checkMateBlackTestResult = self.plat.checkMate("noir")
+	print("@@@@@@@@@@@@@@@", checkMateWhiteTestResult)
+	print("@@@@@@@@@@@@@@@", checkMateBlackTestResult)
+
+	# =============================================================================================
+	# Check echec et mats
+	# =============================================================================================
+
+	self.newEventSauveteur = {
+		"whiteSaver": [],
+		"blackSaver": [],
+		"whiteSaverTrace": [],
+		"blackSaverTrace": []
+	}
+
+	# White Test Echec ----------------------------------------------------------------------------
+
+	if checkMateWhiteTestResult == "mat":
+
+		self.textAffichage.set("ECHEC ET MAT\nLes Noirs l'emportent")
+		self.affichage['fg'] = "black"
+		self.affichage['bg'] = "#A02B2B"
+
+		self.freezeGrid()
+
+	elif type(checkMateWhiteTestResult) == list:
+
+		listeSauveteurWhite = []
+		listeSauveteurWhiteTrace = []
+
+		listeMoveRoiSave = checkMateWhiteTestResult
+
+		for el in listeMoveRoiSave:
+
+			if self.plat.getCaseTuple(el[0]).getType() != 'roi':
+
+				self.dict_bouton[el[0]].config(bg="#5fb1cf")
+
+				listeSauveteurWhite.append(el[0])
+
+				for move in el[1]:
+					self.dict_bouton[el[1]].config(bg="#31cc55")
+
+					listeSauveteurWhiteTrace.append(el[1])
+
+		self.newEventSauveteur["whiteSaver"] = listeSauveteurWhite
+		self.newEventSauveteur["whiteSaverTrace"] = listeSauveteurWhiteTrace
+
+		listButtonNotToDisable = listeSauveteurWhite + listeSauveteurWhiteTrace
+		roiBlanc = self.plat.getRoi("blanc")
+		listButtonNotToDisable.append(roiBlanc)
+		listButtonNotToDisable += self.plat.getPath(roiBlanc)
+
+		self.newEvent.setEnabledButton(listButtonNotToDisable)
+
+		self.disableButtonInCaseOfEchec(self.dict_bouton, listButtonNotToDisable)
+
+
+	elif checkMateWhiteTestResult == "no-echec":
+
+		self.whiteSaverToEmpty = self.event_log[-1].getSaver()
+
+		if self.whiteSaverToEmpty:
+
+			for saver in self.whiteSaverToEmpty["whiteSaver"]:
+				# On récupère sa couleur de base (originelle)
+				self.pionEchecOriginalColor = self.coul_bouton[saver]
+
+				# Et on lui remet sa couleur de base.
+				self.dict_bouton[saver].config(bg=self.pionEchecOriginalColor)
+
+			for saverMove in self.whiteSaverToEmpty["whiteSaverTrace"]:
+				# On récupère sa couleur de base (originelle)
+				self.pionEchecOriginalColor = self.coul_bouton[saverMove]
+
+				# Et on lui remet sa couleur de base.
+				self.dict_bouton[saverMove].config(bg=self.pionEchecOriginalColor)
+
+		self.enableAllButtons()
+
+	# Black Test Echec ----------------------------------------------------------------------------
+
+	if checkMateBlackTestResult == "mat":
+
+		self.textAffichage.set("ECHEC ET MAT\nLes Blancs l'emportent")
+		self.affichage['fg'] = "black"
+		self.affichage['bg'] = "#A02B2B"
+
+		self.freezeGrid()
+
+	elif type(checkMateBlackTestResult) == list:
+
+		listeSauveteurBlack = []
+		listeSauveteurBlackTrace = []
+
+		listeMoveRoiSave = checkMateBlackTestResult
+
+		for el in listeMoveRoiSave:
+
+			if self.plat.getCaseTuple(el[0]).getType() != 'roi':
+
+				self.dict_bouton[el[0]].config(bg="#5fb1cf")
+
+				listeSauveteurBlack.append(el[0])
+
+				for move in el[1]:
+					self.dict_bouton[el[1]].config(bg="#31cc55")
+					listeSauveteurBlackTrace.append(el[1])
+
+		self.newEventSauveteur["blackSaver"] = listeSauveteurBlack
+		self.newEventSauveteur["blackSaverTrace"] = listeSauveteurBlackTrace
+
+		listButtonNotToDisable = listeSauveteurBlack + listeSauveteurBlackTrace
+		roiNoir = self.plat.getRoi("noir")
+		listButtonNotToDisable.append(roiNoir)
+		listButtonNotToDisable += self.plat.getPath(roiNoir)
+
+		self.newEvent.setEnabledButton(listButtonNotToDisable)
+
+		self.disableButtonInCaseOfEchec(self.dict_bouton, listButtonNotToDisable)
+
+	elif checkMateBlackTestResult == "no-echec":
+
+		self.blackSaverToEmpty = self.event_log[-1].getSaver()
+
+		if self.blackSaverToEmpty:
+
+			for saver in self.blackSaverToEmpty["blackSaver"]:
+				# On récupère sa couleur de base (originelle)
+				self.pionEchecOriginalColor = self.coul_bouton[saver]
+
+				# Et on lui remet sa couleur de base.
+				self.dict_bouton[saver].config(bg=self.pionEchecOriginalColor)
+
+			for saverMove in self.blackSaverToEmpty["blackSaverTrace"]:
+				# On récupère sa couleur de base (originelle)
+				self.pionEchecOriginalColor = self.coul_bouton[saverMove]
+
+				# Et on lui remet sa couleur de base.
+				self.dict_bouton[saverMove].config(bg=self.pionEchecOriginalColor)
+
+		self.enableAllButtons()
+
+	self.newEvent.setSaver(self.newEventSauveteur)
+	self.newEvent.setEchecTrace(self.echecTrace)
+	self.newEvent.apercu()
+
+	# On rajoute l'evènement à la liste des évènements
+	self.event_log.append(self.newEvent)
+
+	# On incrémente la chaine qui sert à créer le nom/id des évènements pour le prochain
+	# évènement. Toujours de x + 1
+	self.id += 1
+
+	# self.plat.apercu()

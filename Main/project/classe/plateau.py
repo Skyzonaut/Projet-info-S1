@@ -291,14 +291,15 @@ class Plateau:
 
 			roi = self.getRoi(couleur)
 			ennemiCouleur = "blanc" if couleur == "noir" else "noir"
+			listePieceAllie = self.getMatriceByCouleur(couleur)
 			listePieceEnnemie = self.getMatriceByCouleur(ennemiCouleur)
 			listeMovePieceEnnemie = []
 			listePieceEchec = []
 			listeMoveRoiSave = []
 
-			for piece in listePieceEnnemie:
+			for pieceEnnemie in listePieceEnnemie:
 
-				piecePath = self.getPath(piece, True, takeFriends=True)
+				piecePath = self.getPath(pieceEnnemie, True, takeFriends=True)
 
 				if roi in piecePath:
 
@@ -320,11 +321,9 @@ class Plateau:
 
 						listeMoveRoiSave.append((roi, casePathRoi))
 
-
-
 				for pieceEchec in listePieceEchec:
 
-					for pieceSauveteur in self.getMatriceByCouleur(couleur):
+					for pieceSauveteur in listePieceAllie:
 
 						for movePieceSauveteur in self.getPath(pieceSauveteur):
 
@@ -433,7 +432,7 @@ class Plateau:
 	==================================================================================
 	"""
 
-	def getPath(self, origin: tuple, withTrace=False, takeFriends=False, pion=False) -> list:
+	def getPath(self, origin: tuple, goThrough=False, takeFriends=False, pion=False) -> list:
 		"""
 		:param origin: tuple of int *Case*
 		:return: list of tuple of int *Liste des cases où peut bouger le pion*
@@ -451,7 +450,7 @@ class Plateau:
 		# PION
 		# ==============================================================================================================
 
-		if pionSelected.getType().lower() == "pion" and not withTrace and not pion:
+		if pionSelected.getType().lower() == "pion" and not goThrough and not pion:
 
 			left = -1
 			right = +1
@@ -521,7 +520,7 @@ class Plateau:
 
 						listPossibleMove.append((origin[0] + right, origin[1] + fw))
 
-		elif pionSelected.getType().lower() == "pion" and withTrace and not pion:
+		elif pionSelected.getType().lower() == "pion" and goThrough and not pion:
 
 			left = -1
 			right = +1
@@ -581,7 +580,7 @@ class Plateau:
 
 					listPossibleMove.append((origin[0] + right, origin[1] + fw))
 
-		elif pionSelected.getType().lower() == "pion" and not withTrace and pion:
+		elif pionSelected.getType().lower() == "pion" and not goThrough and pion:
 
 
 			left = -1
@@ -724,11 +723,11 @@ class Plateau:
 
 				if 0 < origin[0] + x < 9 and 0 < origin[1] + x < 9 and downRight:
 
-					if "empty" in self.getCase(origin[0] + x, origin[1] + x).getName() and not withTrace:
+					if "empty" in self.getCase(origin[0] + x, origin[1] + x).getName() and not goThrough:
 
 						listPossibleMove.append((origin[0] + x, origin[1] + x))
 
-					elif "empty" in self.getCase(origin[0] + x, origin[1] + x).getName() and withTrace:
+					elif "empty" in self.getCase(origin[0] + x, origin[1] + x).getName() and goThrough:
 
 						listPossibleMove.append((origin[0] + x, origin[1] + x))
 
@@ -751,11 +750,11 @@ class Plateau:
 
 				if 0 < origin[0] - x < 9 and 0 < origin[1] - x < 9 and upLeft:
 
-					if "empty" in self.getCase(origin[0] - x, origin[1] - x).getName() and not withTrace:
+					if "empty" in self.getCase(origin[0] - x, origin[1] - x).getName() and not goThrough:
 
 						listPossibleMove.append((origin[0] - x, origin[1] - x))
 
-					elif "empty" in self.getCase(origin[0] - x, origin[1] - x).getName() and withTrace:
+					elif "empty" in self.getCase(origin[0] - x, origin[1] - x).getName() and goThrough:
 
 						listPossibleMove.append((origin[0] - x, origin[1] - x))
 					else:
@@ -777,11 +776,11 @@ class Plateau:
 
 				if 0 < origin[0] + x < 9 and 0 < origin[1] - x < 9 and upRight:
 
-					if "empty" in self.getCase(origin[0] + x, origin[1] - x).getName() and not withTrace:
+					if "empty" in self.getCase(origin[0] + x, origin[1] - x).getName() and not goThrough:
 
 						listPossibleMove.append((origin[0] + x, origin[1] - x))
 
-					elif "empty" in self.getCase(origin[0] + x, origin[1] - x).getName() and withTrace:
+					elif "empty" in self.getCase(origin[0] + x, origin[1] - x).getName() and goThrough:
 
 						listPossibleMove.append((origin[0] + x, origin[1] - x))
 
@@ -804,11 +803,11 @@ class Plateau:
 
 				if 0 < origin[0] - x < 9 and 0 < origin[1] + x < 9 and downLeft:
 
-					if "empty" in self.getCase(origin[0] - x, origin[1] + x).getName() and not withTrace:
+					if "empty" in self.getCase(origin[0] - x, origin[1] + x).getName() and not goThrough:
 
 						listPossibleMove.append((origin[0] - x, origin[1] + x))
 
-					elif "empty" in self.getCase(origin[0] - x, origin[1] + x).getName() and withTrace:
+					elif "empty" in self.getCase(origin[0] - x, origin[1] + x).getName() and goThrough:
 
 						listPossibleMove.append((origin[0] - x, origin[1] + x))
 
@@ -852,11 +851,11 @@ class Plateau:
 
 				if 0 < origin[0] + x < 9 and 0 < origin[1] + x < 9 and downRight:
 
-					if "empty" in self.getCase(origin[0] + x, origin[1] + x).getName() and not withTrace:
+					if "empty" in self.getCase(origin[0] + x, origin[1] + x).getName() and not goThrough:
 
 						listPossibleMove.append((origin[0] + x, origin[1] + x))
 
-					elif self.getCase(origin[0] + x, origin[1] + x).getCouleur() != pionSelected.getCouleur() and withTrace:
+					elif self.getCase(origin[0] + x, origin[1] + x).getCouleur() != pionSelected.getCouleur() and goThrough:
 
 						listPossibleMove.append((origin[0] + x, origin[1] + x))
 
@@ -881,11 +880,11 @@ class Plateau:
 
 				if 0 < origin[0] - x < 9 and 0 < origin[1] - x < 9 and upLeft:
 
-					if "empty" in self.getCase(origin[0] - x, origin[1] - x).getName() and not withTrace:
+					if "empty" in self.getCase(origin[0] - x, origin[1] - x).getName() and not goThrough:
 
 						listPossibleMove.append((origin[0] - x, origin[1] - x))
 
-					elif self.getCase(origin[0] - x, origin[1] - x).getCouleur() != pionSelected.getCouleur() and withTrace:
+					elif self.getCase(origin[0] - x, origin[1] - x).getCouleur() != pionSelected.getCouleur() and goThrough:
 
 						listPossibleMove.append((origin[0] - x, origin[1] - x))
 
@@ -910,11 +909,11 @@ class Plateau:
 
 				if 0 < origin[0] + x < 9 and 0 < origin[1] - x < 9 and upRight:
 
-					if "empty" in self.getCase(origin[0] + x, origin[1] - x).getName() and not withTrace:
+					if "empty" in self.getCase(origin[0] + x, origin[1] - x).getName() and not goThrough:
 
 						listPossibleMove.append((origin[0] + x, origin[1] - x))
 
-					elif self.getCase(origin[0] + x, origin[1] - x).getCouleur() != pionSelected.getCouleur() and withTrace:
+					elif self.getCase(origin[0] + x, origin[1] - x).getCouleur() != pionSelected.getCouleur() and goThrough:
 
 						listPossibleMove.append((origin[0] + x, origin[1] - x))
 
@@ -939,11 +938,11 @@ class Plateau:
 
 				if 0 < origin[0] - x < 9 and 0 < origin[1] + x < 9 and downLeft:
 
-					if "empty" in self.getCase(origin[0] - x, origin[1] + x).getName() and not withTrace:
+					if "empty" in self.getCase(origin[0] - x, origin[1] + x).getName() and not goThrough:
 
 						listPossibleMove.append((origin[0] - x, origin[1] + x))
 
-					elif self.getCase(origin[0] - x, origin[1] + x).getCouleur() != pionSelected.getCouleur() and withTrace:
+					elif self.getCase(origin[0] - x, origin[1] + x).getCouleur() != pionSelected.getCouleur() and goThrough:
 
 						listPossibleMove.append((origin[0] - x, origin[1] + x))
 
@@ -968,11 +967,11 @@ class Plateau:
 
 				if 0 < origin[1] + x < 9 and up:
 
-					if "empty" in self.getCase(origin[0], origin[1] + x).getName() and not withTrace:
+					if "empty" in self.getCase(origin[0], origin[1] + x).getName() and not goThrough:
 
 						listPossibleMove.append((origin[0], origin[1] + x))
 
-					elif self.getCase(origin[0], origin[1] + x).getCouleur() != pionSelected.getCouleur() and withTrace:
+					elif self.getCase(origin[0], origin[1] + x).getCouleur() != pionSelected.getCouleur() and goThrough:
 
 						listPossibleMove.append((origin[0], origin[1] + x))
 
@@ -997,11 +996,11 @@ class Plateau:
 
 				if 0 < origin[1] - x < 9 and down:
 
-					if "empty" in self.getCase(origin[0], origin[1] - x).getName() and not withTrace:
+					if "empty" in self.getCase(origin[0], origin[1] - x).getName() and not goThrough:
 
 						listPossibleMove.append((origin[0], origin[1] - x))
 
-					elif self.getCase(origin[0], origin[1] - x).getCouleur() != pionSelected.getCouleur() and withTrace:
+					elif self.getCase(origin[0], origin[1] - x).getCouleur() != pionSelected.getCouleur() and goThrough:
 
 						listPossibleMove.append((origin[0], origin[1] - x))
 
@@ -1026,11 +1025,11 @@ class Plateau:
 
 				if 0 < origin[0] - x < 9 and left:
 
-					if "empty" in self.getCase(origin[0] - x, origin[1]).getName() and not withTrace:
+					if "empty" in self.getCase(origin[0] - x, origin[1]).getName() and not goThrough:
 
 						listPossibleMove.append((origin[0] - x, origin[1]))
 
-					elif self.getCase(origin[0] - x, origin[1]).getCouleur() != pionSelected.getCouleur() and withTrace:
+					elif self.getCase(origin[0] - x, origin[1]).getCouleur() != pionSelected.getCouleur() and goThrough:
 
 						listPossibleMove.append((origin[0] - x, origin[1]))
 
@@ -1055,11 +1054,11 @@ class Plateau:
 
 				if 0 < origin[0] + x < 9 and right:
 
-					if "empty" in self.getCase(origin[0] + x, origin[1]).getName() and not withTrace:
+					if "empty" in self.getCase(origin[0] + x, origin[1]).getName() and not goThrough:
 
 						listPossibleMove.append((origin[0] + x, origin[1]))
 
-					elif self.getCase(origin[0] + x, origin[1]).getCouleur() != pionSelected.getCouleur() and withTrace:
+					elif self.getCase(origin[0] + x, origin[1]).getCouleur() != pionSelected.getCouleur() and goThrough:
 
 						listPossibleMove.append((origin[0] + x, origin[1]))
 
@@ -1316,11 +1315,11 @@ class Plateau:
 
 				if 0 < origin[1] + x < 9 and up:
 
-					if "empty" in self.getCase(origin[0], origin[1] + x).getName() and not withTrace:
+					if "empty" in self.getCase(origin[0], origin[1] + x).getName() and not goThrough:
 
 						listPossibleMove.append((origin[0], origin[1] + x))
 
-					elif "empty" in self.getCase(origin[0], origin[1] + x).getName() and withTrace:
+					elif "empty" in self.getCase(origin[0], origin[1] + x).getName() and goThrough:
 
 						listPossibleMove.append((origin[0], origin[1] + x))
 
@@ -1345,11 +1344,11 @@ class Plateau:
 
 				if 0 < origin[1] - x < 9 and down:
 
-					if "empty" in self.getCase(origin[0], origin[1] - x).getName() and not withTrace:
+					if "empty" in self.getCase(origin[0], origin[1] - x).getName() and not goThrough:
 
 						listPossibleMove.append((origin[0], origin[1] - x))
 
-					elif "empty" in self.getCase(origin[0], origin[1] - x).getName() and withTrace:
+					elif "empty" in self.getCase(origin[0], origin[1] - x).getName() and goThrough:
 
 						listPossibleMove.append((origin[0], origin[1] - x))
 
@@ -1374,11 +1373,11 @@ class Plateau:
 
 				if 0 < origin[0] - x < 9 and left:
 
-					if "empty" in self.getCase(origin[0] - x, origin[1]).getName() and not withTrace:
+					if "empty" in self.getCase(origin[0] - x, origin[1]).getName() and not goThrough:
 
 						listPossibleMove.append((origin[0] - x, origin[1]))
 
-					if "empty" in self.getCase(origin[0] - x, origin[1]).getName() and withTrace:
+					elif "empty" in self.getCase(origin[0] - x, origin[1]).getName() and goThrough:
 
 						listPossibleMove.append((origin[0] - x, origin[1]))
 
@@ -1403,11 +1402,11 @@ class Plateau:
 
 				if 0 < origin[0] + x < 9 and right:
 
-					if "empty" in self.getCase(origin[0] + x, origin[1]).getName() and not withTrace:
+					if "empty" in self.getCase(origin[0] + x, origin[1]).getName() and not goThrough:
 
 						listPossibleMove.append((origin[0] + x, origin[1]))
 
-					elif "empty" in self.getCase(origin[0] + x, origin[1]).getName() and withTrace:
+					elif "empty" in self.getCase(origin[0] + x, origin[1]).getName() and goThrough:
 
 						listPossibleMove.append((origin[0] + x, origin[1]))
 

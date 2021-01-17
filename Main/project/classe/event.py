@@ -28,7 +28,7 @@ class event:
 		self.cache = _cache
 		self.trace = _trace
 		self.echecTrace = _echecTrace
-		self.sauveteur = _sauveteur
+		self.saver = _sauveteur
 		self.enabledButton = _enableButton
 
 	# Getter
@@ -39,7 +39,7 @@ class event:
 	def getCache(self): return self.cache
 	def getTrace(self): return self.trace
 	def getEchecTrace(self): return self.echecTrace
-	def getSauveteur(self): return self.sauveteur
+	def getSaver(self): return self.saver
 	def getEnabledButton(self): return self.enabledButton
 
 	# Setter
@@ -50,7 +50,7 @@ class event:
 	def setCache(self,  newCache): self.cache = newCache
 	def setTrace(self, newTrace): self.trace = newTrace
 	def setEchecTrace(self, newEchecTrace): self.echecTrace = newEchecTrace
-	def setSauveteur(self, newSauveteur): self.sauveteur = newSauveteur
+	def setSaver(self, newSauveteur): self.saver = newSauveteur
 	def setEnabledButton(self, newEnabledButton): self.enabledButton = newEnabledButton
 
 	# DEBUG
@@ -63,6 +63,6 @@ class event:
 		print("| Cache  : " + str(self.cache))
 		print("| Trace  : " + str(self.trace))
 		print("| Echec  : " + str(self.echecTrace))
-		print("| Saver  : " + str(self.sauveteur))
-		print("| BtnOn  : " + str(self.enabledButton))
+		print("| Saver  : " + str(self.saver))
+		# print("| BtnOn  : " + str(self.enabledButton))
 
