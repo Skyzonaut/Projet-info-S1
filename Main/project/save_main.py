@@ -366,3 +366,17 @@ def move(self, tuple):
 	self.id += 1
 
 	# self.plat.apercu()
+
+# def run():
+#     gamePlaying = True
+#     oldTime = datetime.now().strftime("%H:%M:%S")
+#     while gamePlaying:
+#         now = datetime.now().strftime("%H:%M:%S")
+#         if oldTime != now:
+#             print(now)
+#             oldTime = now
+#
+#
+# control_thread = Thread(target=run, daemon=True)
+
+# control_thread.start()

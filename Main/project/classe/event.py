@@ -4,23 +4,25 @@ class event:
 	Classe d'objet permettant de stocker des informations lors d'un clic
 	et qui seront accessible lors des clics suivants
 	"""
-	def __init__(self, _id: int,
-				 _origin: tuple,
-				 _action: str,
-				 _cache=None,
-				 _trace=None,
-				 _echecTrace=None,
-				 _sauveteur=None,
-				 _enableButton=None):
+	def __init__(self, _id: int, _origin: tuple,  _action: str, _cache=None, _trace=None, _echecTrace=None,
+				 _sauveteur=None, _enableButton=None):
 		"""
+		Constructeur de la classe event, permettant de stocker des informations lors d'un clic
+		et qui seront accessible lors des clics suivants
+
 		:param _id: Identifiant de l'évènements
 		:param _origin: Case (tuple) qui a été cliquée et sur laquelle porte l'évènement
 		:param _action: Type de clic : "clic" = Sélection du pion | "Place" = Sélection de la case où le déplacer
 		:param _cache: Sert à stocker l'image du pion précédemment sélectionné
+		:type _cache: bool
 		:param _trace: Sert à stocker les déplacements possibles du pion précédemment sélectionné
+		:type _trace: bool
 		:param _echecTrace: Sert à stocker les pions mettant en échec les rois
+		:type _echecTrace: bool
 		:param _sauveteur: Sert à stocker les pions pouvant sauver d'un echec son roi
+		:type _sauveteur: bool
 		:param _enableButton: Sert à stocker les boutons/case à désactiver et réactiver lors d'un echec
+		:type _enableButton: bool
 		"""
 		self.id = _id
 		self.origin = _origin
@@ -64,5 +66,4 @@ class event:
 		print("| Trace  : " + str(self.trace))
 		print("| Echec  : " + str(self.echecTrace))
 		print("| Saver  : " + str(self.saver))
-		# print("| BtnOn  : " + str(self.enabledButton))
 

@@ -12,8 +12,12 @@ class Plateau:
 		}
 	}
 	"""
-	def __init__(self, initType):
+	def __init__(self, initType: str):
+		"""
+		Objet contenant une matrice quadrillant un jeu d'echec et stockant le contenu des cases.
 
+		:param initType: "classic" = déploiement classic | "other" = déploiement spécifique
+		"""
 		# écupération de tous les pions
 		self.setDeJeu = set()
 
@@ -26,6 +30,7 @@ class Plateau:
 		# Matrice contenant les cases et dans ces cases leur contenu
 		self.matrice = {}
 
+		# Initialisation normale si indiqué dans le constructeur via la paramètre initType
 		if initType == "classic":
 
 			# ===============================================================================================
@@ -71,6 +76,7 @@ class Plateau:
 			self.matrice[(7, 8)] = self.setDeJeu.getFreePion("cavalier", "blanc")
 			self.matrice[(8, 8)] = self.setDeJeu.getFreePion("tour", "blanc")
 
+		# Initialisation différente si indiqué dans le constructeur via la paramètre initType
 		elif initType == "other":
 
 			self.matrice[(1, 2)] = self.setDeJeu.getFreePion("pion", "noir")
@@ -128,7 +134,6 @@ class Plateau:
 			- Destination == Empty *Déplace sur une case vide* : Interchange le pion et la case vide
 			- Destination == pion *Déplace sur un case pleine et prend le pion* :
 			Se déplace, et retire le pion du plateau, passe son état à False
-
 		"""
 
 		# Si le joueur ne reclique pas sur la meme case, dans le cas donc faire un déplacement
@@ -164,17 +169,32 @@ class Plateau:
 			pass
 
 
-	def empty(self, x, y):
+	def empty(self, x: int, y: int):
+		"""
+		Vide une case (x, y)
+
+		:param x: x
+		:param y: y
+		"""
 		self.matrice[(x, y)] = self.setDeJeu.getFreePion("empty", "")
 
 
-	def reinitialize(self): self.__init__()
+	def getMatrice(self):
+		"""
+		Retourne le dictionnaire servant de base de donné au plateau
+
+		:return: plateau.matrice
+		"""
+		return self.matrice
 
 
-	def getMatrice(self): return self.matrice
+	def getMatriceByCouleur(self, couleur: str):
+		"""
+		Retourne tous les pions de la couleur précisée
 
-
-	def getMatriceByCouleur(self, couleur):
+		:param couleur: couleur à récuperer
+		:return: plateau.matrice by couleur
+		"""
 
 		returnDict = []
 
@@ -187,18 +207,46 @@ class Plateau:
 		return returnDict
 
 
-	def getCase(self, x, y): return self.matrice[(x, y)]
+	def getCase(self, x, y) -> pion:
+		"""
+		Récupère le contenu d'une case de coordonnées (x, y) données.
 
-	def getCaseTuple(self, tuple): return self.matrice[tuple[0], tuple[1]]
+		:param x: x
+		:param y: y
+		:return: pion
+		"""
 
-	def setCase(self, x, y, content): self.matrice[(x, y)] = content
+		return self.matrice[(x, y)]
 
-	def getRoi(self, couleur):
+	def getCaseTuple(self, tuple) -> pion:
+		"""
+		Récupère le cotenu d'une case de coordonnées (x, y) données.
+		Semblable à la fonction getCase(), mais le paramètre est un tuple ici et non deux entiers
+
+		:param tuple: coordonnées
+		:return: pion
+		"""
+
+		return self.matrice[tuple[0], tuple[1]]
+
+	def setCase(self, x, y, content):
+		"""
+		Remplace le cotenu d'une case de coordonnées (x, y) données par le pion donné.
+
+		:param tuple: coordonnées
+		:param content: pion par lequel remplacer le contenu initial de la case (x, y)
+		"""
+
+		self.matrice[(x, y)] = content
+
+	def getRoi(self, couleur: str) -> tuple:
 		"""
 		Récupère la position du roi de la couleur donnée
 
 		Args:
 			couleur: Couleur du roi à chercher. "noir" ou "blanc"
+
+		:return: Coordonnées du roi
 		"""
 
 		for coord, pion in self.matrice.items():
@@ -217,6 +265,9 @@ class Plateau:
 		Args:
 			origin: Pièce d'où part le pathfinding
 			target: Pièce qu'il doit atteindre
+			takeOrigin: Si la trajectoire doit inclure la pièce à atteindre
+
+		:return: list[tuple]
 		"""
 
 		listPathBetween = []
@@ -273,6 +324,7 @@ class Plateau:
 
 		return highestScoreMove
 
+
 	def getCasePathFinding(self, origin: tuple, target: tuple, takeOrigin=False):
 		"""
 		Récupère les cases sur la trajectoire entre une case @origin et une case @target.
@@ -281,6 +333,8 @@ class Plateau:
 			origin: Pièce d'où part le pathfinding
 			target: Pièce qu'il doit atteindre
 			takeOrigin: True si la trajectoire doit contenir la @target (cible), False si elle doit s'arrêter avant
+
+		:returns: Liste des cases sur le trajet
 		"""
 
 		listPathFinding = self.pathFinding(origin, target, takeOrigin)
@@ -292,7 +346,14 @@ class Plateau:
 
 		return listCasePathFinding
 
-	def checkEchec(self, couleur):
+
+	def checkEchec(self, couleur: str):
+		"""
+		Récupère les pions mettant en échec le roi de couleur @couleur
+
+		:param couleur: couleur du roi qui serait mis en échec
+		:return: liste des pions qui mettent le roi de la couleur donnée en échec
+		"""
 
 		listPieceEchec = []
 		ennemiCouleur = "blanc" if couleur == "noir" else "noir"
@@ -306,7 +367,17 @@ class Plateau:
 
 		return listPieceEchec
 
+
 	def checkMate(self, couleur):
+		"""
+		Test si le roi de la couleur données est :
+			- En echec et mat
+			- En echec simple : Dans quel cas retourne la liste des déplacements pouvant sauver le roi
+			- Ne retourne rien si aucun des deux précédents
+
+		:param couleur: couleur du roi qui serait mis en échec
+		:return: liste des pions qui mettent le roi de la couleur donnée en échec
+		"""
 
 		if self.checkEchec(couleur):
 
@@ -318,6 +389,7 @@ class Plateau:
 			listePieceEchec = []
 			listeMoveRoiSave = []
 
+			# On stocke toutes les cases sur le chemin d'un ennemi
 			for pieceEnnemie in listePieceEnnemie:
 
 				piecePath = self.getPath(pieceEnnemie, goThrough=True, takeFriends=False)
@@ -332,7 +404,9 @@ class Plateau:
 
 						listeMovePieceEnnemie.append(casePath)
 
+			# On stocke toutes les cases qui sont protégées par un ennemie
 			listeMovePieceEnnemieTakeFriends = []
+
 			for pieceEnnemie in listePieceEnnemie:
 
 				piecePath = self.getPath(pieceEnnemie, goThrough=True, takeFriends=True)
@@ -343,24 +417,30 @@ class Plateau:
 
 						listeMovePieceEnnemieTakeFriends.append(casePath)
 
+			# S'il existe des pièces mettant le roi en echec
 			if listeMovePieceEnnemie:
 
 				listeMoveRoi = self.getPath(roi)
-				print(listeMovePieceEnnemieTakeFriends)
+
+				# On récupère les dépalcement du roi, s'il n'est pas sur le chemin d'un ennemi
 				for casePathRoi in listeMoveRoi:
 
 					if casePathRoi not in listeMovePieceEnnemieTakeFriends:
 
 						listeMoveRoiSave.append((roi, casePathRoi))
 
+				# Pour chaque pièce mettant le roi en echec, on regarde si le roi peut l'éviter, ou si un autre pion
+				# allié peut s'interposer ou si les deux peuvent le prendre.
 				for pieceEchec in listePieceEchec:
 
 					for pieceSauveteur in listePieceAllie:
 
 						for movePieceSauveteur in self.getPath(pieceSauveteur):
 
+							# Le roi a déjà été géré alors on l'ignore
 							if self.getCaseTuple(pieceSauveteur).getType() != "roi":
 
+								# Si c'est un cavalier il peut éviter des cases
 								if self.getCaseTuple(pieceEchec).getType() == "cavalier":
 
 									if movePieceSauveteur == pieceEchec:
@@ -385,10 +465,19 @@ class Plateau:
 
 			return "no-echec"
 
-	def apercuSet(self): self.setDeJeu.apercu()
+
+	def apercuSet(self):
+		"""
+		Print sur le terminal l'état du de jeu à l'état actuel.
+		"""
+
+		self.setDeJeu.apercu()
 
 
 	def apercu(self):
+		"""
+		Affiche sur le terminal un plateau en ASCII contenant et affichant les pions du plateau à l'état actuel
+		"""
 
 		# Print la bordure haute
 		print("-" * 153)
@@ -418,6 +507,11 @@ class Plateau:
 
 
 	def apercuText(self):
+		"""
+		Affiche sur le terminal un plateau en ASCII contenant et affichant les pions du plateau à l'état actuel.
+		Semblable à apercu() mais ici les cases sont carrées.
+		Cela prend plus de place mais ressemble davantage à un vrai échiquier
+		"""
 
 		# Print la bordure haute
 		print("-" * 153)
@@ -466,11 +560,15 @@ class Plateau:
 	def getPath(self, origin: tuple, goThrough=False, takeFriends=False, pion=False) -> list:
 		"""
 		:param origin: tuple of int *Case*
+		:param goThrough: True si le trajet doit être calculé en ignorant les pions sur sont chemin
+		:type goThrough: bool
+		:param takeFriends: True si le trajet doit comprendre les alliées du pion
+		:type takeFriends: bool
+		:param pion: True si le trajet doit afficher les prises d'un pion même si aucun pion ennemi ne permet se move
+		:type pion: bool
 		:return: list of tuple of int *Liste des cases où peut bouger le pion*
 
-		Fonction récupérant le plateau à l'état actuel, le pion à bouger,
-		et renvoie toutes les cases sur lesquelles il peut se déplacer.
-		S'arrête toujours au premier pion adversaire pris, et gère la colision avec les pions alliés
+		Fonction qui renvoie toutes les cases sur lesquelles il peut se déplacer selon les paramètres donnés.
 		"""
 
 		pionSelected = self.getCase(origin[0], origin[1])
