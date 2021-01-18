@@ -1,7 +1,7 @@
 
 class pion:
 
-	def __init__(self, _name, _type, _couleur, _state, _image):
+	def __init__(self, _name: str, _type: str, _couleur: str, _state: bool, _image) -> None:
 
 		self.name = _name
 		self.type = _type
