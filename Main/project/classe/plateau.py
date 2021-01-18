@@ -12,7 +12,7 @@ class Plateau:
 		}
 	}
 	"""
-	def __init__(self):
+	def __init__(self, initType):
 
 		# écupération de tous les pions
 		self.setDeJeu = set()
@@ -26,52 +26,88 @@ class Plateau:
 		# Matrice contenant les cases et dans ces cases leur contenu
 		self.matrice = {}
 
-		# ===============================================================================================
-		# Cases vides du milieu du plateau
-		# ===============================================================================================
+		if initType == "classic":
 
-		for y in range(3, 7):
+			# ===============================================================================================
+			# Cases vides du milieu du plateau
+			# ===============================================================================================
+
+			for y in range(3, 7):
+				for x in range(1, 9):
+					newPion = self.setDeJeu.getFreePion("empty", "")
+					self.matrice[(x, y)] = newPion
+
+			# ===============================================================================================
+			# Blanc
+			# ===============================================================================================
+
+			for i in range(1, 9):
+				newPion = self.setDeJeu.getFreePion("pion", "noir")
+				self.matrice[(i, 2)] = newPion
+
+			self.matrice[(1, 1)] = self.setDeJeu.getFreePion("tour", "noir")
+			self.matrice[(2, 1)] = self.setDeJeu.getFreePion("cavalier", "noir")
+			self.matrice[(3, 1)] = self.setDeJeu.getFreePion("fou", "noir")
+			self.matrice[(4, 1)] = self.setDeJeu.getFreePion("reine", "noir")
+			self.matrice[(5, 1)] = self.setDeJeu.getFreePion("roi", "noir")
+			self.matrice[(6, 1)] = self.setDeJeu.getFreePion("fou", "noir")
+			self.matrice[(7, 1)] = self.setDeJeu.getFreePion("cavalier", "noir")
+			self.matrice[(8, 1)] = self.setDeJeu.getFreePion("tour", "noir")
+
+			# ===============================================================================================
+			# Noir
+			# ===============================================================================================
+
+			for i in range(1, 9):
+				newPion = self.setDeJeu.getFreePion("pion", "blanc")
+				self.matrice[(i, 7)] = newPion
+
+			self.matrice[(1, 8)] = self.setDeJeu.getFreePion("tour", "blanc")
+			self.matrice[(2, 8)] = self.setDeJeu.getFreePion("cavalier", "blanc")
+			self.matrice[(3, 8)] = self.setDeJeu.getFreePion("fou", "blanc")
+			self.matrice[(4, 8)] = self.setDeJeu.getFreePion("reine", "blanc")
+			self.matrice[(5, 8)] = self.setDeJeu.getFreePion("roi", "blanc")
+			self.matrice[(6, 8)] = self.setDeJeu.getFreePion("fou", "blanc")
+			self.matrice[(7, 8)] = self.setDeJeu.getFreePion("cavalier", "blanc")
+			self.matrice[(8, 8)] = self.setDeJeu.getFreePion("tour", "blanc")
+
+		elif initType == "other":
+
+			self.matrice[(1, 2)] = self.setDeJeu.getFreePion("pion", "noir")
+			self.matrice[(2, 2)] = self.setDeJeu.getFreePion("pion", "noir")
+			self.matrice[(3, 2)] = self.setDeJeu.getFreePion("pion", "noir")
+			self.matrice[(6, 2)] = self.setDeJeu.getFreePion("pion", "noir")
+			self.matrice[(7, 2)] = self.setDeJeu.getFreePion("pion", "noir")
+			self.matrice[(8, 4)] = self.setDeJeu.getFreePion("pion", "noir")
+
+			self.matrice[(4, 5)] = self.setDeJeu.getFreePion("cavalier", "noir")
+			self.matrice[(2, 3)] = self.setDeJeu.getFreePion("fou", "noir")
+			self.matrice[(3, 5)] = self.setDeJeu.getFreePion("reine", "noir")
+			self.matrice[(2, 1)] = self.setDeJeu.getFreePion("roi", "noir")
+			self.matrice[(7, 3)] = self.setDeJeu.getFreePion("fou", "noir")
+
+			# ===============================================================================================
+			# Noir
+			# ===============================================================================================
+
+			self.matrice[(1, 7)] = self.setDeJeu.getFreePion("pion", "blanc")
+			self.matrice[(2, 7)] = self.setDeJeu.getFreePion("pion", "blanc")
+			self.matrice[(3, 7)] = self.setDeJeu.getFreePion("pion", "blanc")
+			self.matrice[(5, 4)] = self.setDeJeu.getFreePion("pion", "blanc")
+			self.matrice[(6, 5)] = self.setDeJeu.getFreePion("pion", "blanc")
+			self.matrice[(7, 4)] = self.setDeJeu.getFreePion("pion", "blanc")
+			self.matrice[(8, 5)] = self.setDeJeu.getFreePion("pion", "blanc")
+
+			self.matrice[(4, 8)] = self.setDeJeu.getFreePion("tour", "blanc")
+			self.matrice[(7, 6)] = self.setDeJeu.getFreePion("cavalier", "blanc")
+			self.matrice[(5, 6)] = self.setDeJeu.getFreePion("fou", "blanc")
+			self.matrice[(3, 8)] = self.setDeJeu.getFreePion("reine", "blanc")
+			self.matrice[(2, 8)] = self.setDeJeu.getFreePion("roi", "blanc")
+
 			for x in range(1, 9):
-				newPion = self.setDeJeu.getFreePion("empty", "")
-				self.matrice[(x, y)] = newPion
-
-		# ===============================================================================================
-		# Blanc
-		# ===============================================================================================
-
-		# TODO: Ajouter initialisation différente (placement prédéfini de pièces)
-
-		for i in range(1, 9):
-			newPion = self.setDeJeu.getFreePion("pion", "noir")
-			self.matrice[(i, 2)] = newPion
-
-		self.matrice[(1, 1)] = self.setDeJeu.getFreePion("tour", "noir")
-		self.matrice[(2, 1)] = self.setDeJeu.getFreePion("cavalier", "noir")
-		self.matrice[(3, 1)] = self.setDeJeu.getFreePion("fou", "noir")
-		self.matrice[(4, 1)] = self.setDeJeu.getFreePion("reine", "noir")
-		self.matrice[(5, 1)] = self.setDeJeu.getFreePion("roi", "noir")
-		self.matrice[(6, 1)] = self.setDeJeu.getFreePion("fou", "noir")
-		self.matrice[(7, 1)] = self.setDeJeu.getFreePion("cavalier", "noir")
-		self.matrice[(8, 1)] = self.setDeJeu.getFreePion("tour", "noir")
-
-		# ===============================================================================================
-		# Noir
-		# ===============================================================================================
-
-		for i in range(1, 9):
-			newPion = self.setDeJeu.getFreePion("pion", "blanc")
-			self.matrice[(i, 7)] = newPion
-
-		self.matrice[(1, 8)] = self.setDeJeu.getFreePion("tour", "blanc")
-		self.matrice[(2, 8)] = self.setDeJeu.getFreePion("cavalier", "blanc")
-		self.matrice[(3, 8)] = self.setDeJeu.getFreePion("fou", "blanc")
-		self.matrice[(4, 8)] = self.setDeJeu.getFreePion("reine", "blanc")
-		self.matrice[(5, 8)] = self.setDeJeu.getFreePion("roi", "blanc")
-		self.matrice[(6, 8)] = self.setDeJeu.getFreePion("fou", "blanc")
-		self.matrice[(7, 8)] = self.setDeJeu.getFreePion("cavalier", "blanc")
-		self.matrice[(8, 8)] = self.setDeJeu.getFreePion("tour", "blanc")
-
-
+				for y in range(1, 9):
+					if not (x,y) in list(self.matrice.keys()):
+						self.matrice[(x, y)] = self.setDeJeu.getFreePion("empty", "")
 
 	"""
 	==================================================================================
@@ -171,21 +207,6 @@ class Plateau:
 
 				return coord
 
-
-	# def getDangerMatrice(self, couleur):
-	#
-	# 	listDangerCase = []
-	# 	ennemiCouleur = "blanc" if couleur == "noir" else "noir"
-	#
-	# 	for pion in self.getMatriceByCouleur(ennemiCouleur):
-	#
-	# 		for dangerCase in self.getPath(pion):
-	#
-	# 			if dangerCase not in listDangerCase:
-	#
-	# 				listDangerCase.append(dangerCase)
-	#
-	# 	return listDangerCase
 
 	def pathFinding(self, origin: tuple, target: tuple, takeOrigin=False):
 		"""
@@ -299,11 +320,11 @@ class Plateau:
 
 			for pieceEnnemie in listePieceEnnemie:
 
-				piecePath = self.getPath(pieceEnnemie, True, takeFriends=True)
+				piecePath = self.getPath(pieceEnnemie, goThrough=True, takeFriends=False)
 
 				if roi in piecePath:
 
-					listePieceEchec.append(piece)
+					listePieceEchec.append(pieceEnnemie)
 
 				for casePath in piecePath:
 
@@ -311,13 +332,24 @@ class Plateau:
 
 						listeMovePieceEnnemie.append(casePath)
 
+			listeMovePieceEnnemieTakeFriends = []
+			for pieceEnnemie in listePieceEnnemie:
+
+				piecePath = self.getPath(pieceEnnemie, goThrough=True, takeFriends=True)
+
+				for casePath in piecePath:
+
+					if casePath not in listeMovePieceEnnemieTakeFriends:
+
+						listeMovePieceEnnemieTakeFriends.append(casePath)
+
 			if listeMovePieceEnnemie:
 
 				listeMoveRoi = self.getPath(roi)
-
+				print(listeMovePieceEnnemieTakeFriends)
 				for casePathRoi in listeMoveRoi:
 
-					if casePathRoi not in listeMovePieceEnnemie:
+					if casePathRoi not in listeMovePieceEnnemieTakeFriends:
 
 						listeMoveRoiSave.append((roi, casePathRoi))
 
@@ -340,7 +372,6 @@ class Plateau:
 									if movePieceSauveteur in self.getCasePathFinding(pieceEchec, roi, True):
 
 										listeMoveRoiSave.append((pieceSauveteur, movePieceSauveteur))
-
 
 				if listeMoveRoiSave:
 
