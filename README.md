@@ -1,5 +1,5 @@
 # Projet-info-S1
-#Présentation
+## Présentation
 Création d'un jeu d'échec en Python. Initialement uniquement en affichage ASCII sur Terminal. Mais j'y ai décidé de rajouter une interface graphique et des fonctionnalités supplémentaires pour avoir un jeu fonctionnel.
 
 ## Contenu
